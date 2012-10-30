@@ -1,0 +1,4 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\.NETFramework\v4.0.30128\AssemblyFoldersEx\ReactiveExtensions]
+@="%LAYOUT%\\redist\\desktopV4"

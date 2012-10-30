@@ -1,0 +1,32 @@
+Prerequisites:
+ - VS2010
+ - Silverlight V4 Runtime and SDK
+ - PowerShell V2
+
+1. Start shell.bat, locatated in the root of the distribution.
+
+2. From within that shell, type:
+     .\setup
+   to construct some of the project files.
+
+3. Then type:
+     .\build
+   to build the compiler, rewriter and support libraries.
+
+4. (Optional) To run the baseline tests, try:
+     .\test run
+
+5. IL2JS_CompileTime.sln referenences all the compile-time projects (compiler and support libraries).
+   IL2JS_RunTime.sln references all the run-time projects (run-time libraries and tests).
+   These solutions, and all the projects they reference, require the environment variable:
+     IL2JSROOT
+   or the registery setting
+     HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\IL2JS@Root
+   to be set to <your path to IL2JS>. The powershell setup above sets this variable for you. If you wish
+   to use the solutions or projects elsewhere, please set this variable yourself.
+
+6. Type:
+     .\clean
+   to clean all built files, and:
+     .\teardown
+   to delete all constructed project files.

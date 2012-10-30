@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<VSTemplate Version="3.0.0" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005" Type="Project">
+  <TemplateData>
+    <Name>IL2JS Application</Name>
+    <Description>An IL2JS browser application which runs in both Silverlight and plain JavaScript.</Description>
+    <Icon>Logo.ico</Icon>
+    <ProjectType>CSharp</ProjectType>
+    <TemplateGroupID>Silverlight</TemplateGroupID>
+    <SortOrder>40</SortOrder>
+    <RequiredFrameworkVersion>4.0</RequiredFrameworkVersion>
+    <CreateNewFolder>true</CreateNewFolder>
+    <DefaultName>IL2JSApplication</DefaultName>
+    <ProvideDefaultName>true</ProvideDefaultName>
+    <LocationField>Enabled</LocationField>
+    <PromptForSaveOnCreation>true</PromptForSaveOnCreation>
+    <EnableLocationBrowseButton>true</EnableLocationBrowseButton>
+    <NumberOfParentCategoriesToRollUp>1</NumberOfParentCategoriesToRollUp>
+  </TemplateData>
+  <TemplateContent>
+    <Project File="IL2JSApplication.csproj" ReplaceParameters="true">
+      <ProjectItem OpenInEditor="false" ReplaceParameters="true" >App.xaml</ProjectItem>
+      <ProjectItem OpenInEditor="false" ReplaceParameters="true" >App.xaml.cs</ProjectItem>
+      <ProjectItem OpenInEditor="false" ReplaceParameters="false">Properties\AppManifest.xml</ProjectItem>
+      <ProjectItem OpenInEditor="false" ReplaceParameters="true" >Properties\AssemblyInfo.cs</ProjectItem>
+      <ProjectItem OpenInEditor="true"  ReplaceParameters="true" >Page1.cs</ProjectItem>
+      <ProjectItem OpenInEditor="false" ReplaceParameters="false">Start_il2js.html</ProjectItem>
+      <ProjectItem OpenInEditor="false" ReplaceParameters="false">Start_silverlight.html</ProjectItem>
+      <ProjectItem OpenInEditor="false" ReplaceParameters="true" >main.html</ProjectItem>
+    </Project>
+  </TemplateContent>
+</VSTemplate>

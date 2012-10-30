@@ -1,0 +1,7 @@
+**** Conditional simplifications, especially around iszero (isnull x) etc.
+
+**** Break and continue can cross exception handling blocks, no need to fall back to state machine encoding.
+
+**** Type-level environments to capture common types already built to phase 3.
+
+**** Profile compiler. Probably need to lazy-load method bodies.

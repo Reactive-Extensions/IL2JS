@@ -1,0 +1,83 @@
+﻿//
+// Handling the { "/", "/=" } vs RegularExpression issue.
+// mshields@microsoft.com
+//
+
+From the ECMA-262 Spec:
+
+    There are two goal symbols for the lexical grammar. The InputElementDiv symbol is used in those syntactic
+    grammar contexts where a division (/) or division-assignment (/=) operator is permitted. The
+    InputElementRegExp symbol is used in other syntactic grammar contexts.
+
+
+From the grammar, "/" and "/=" may only follow tokens in LAST(LeftHandSideExpression) and LAST(UnaryExpression),
+where:
+
+LAST(PrimaryExpression) = { "this", Identifier, NullLiteral, BooleanLiteral, NumericLiteral, StringLiteral, RegularExpressionLiteral, "]", "}", ")" }
+LAST(MemberExpression) = LAST(PrimaryExpression) U LAST(Arguments) U { "]", Identifier }
+LAST(LeftHandSideExpression)  = LAST(MemberExpression) U LAST(Arguments) U { "]", Identifier }
+LAST(Arguments) = { ")" } */
+LAST(PostfixExpression) = LAST(LeftHandSideExpression) U { "++", "--" }
+LAST(UnaryExpression) = LAST(PostfixExpression)
+
+Thus:
+
+BEORE("/", "/=") =
+LAST(LeftHandSizeExpression) U LAST(UnaryExpression) =
+LAST(LeftHandSizeExpression) U LAST(PostfixExpression) =
+LAST(LeftHandSizeExpression) U LAST(LeftHandSideExpression) U { "++", "--" } =
+LAST(LeftHandSideExpression) U { "++", "--" } =
+LAST(MemberExpression) U LAST(Arguments) U { "]", Identifier, "++", "--" } =
+LAST(PrimaryExpression) U Last(Arguments) U { "]", Identifier, "++", "--" } =
+LAST(PrimaryExpression) U { ")", "]", Identifier, "++", "--" } =
+{ "this", Identifier, NullLiteral, BooleanLiteral, NumericLiteral, StringLiteral, RegularExpressionLiteral, "]", "}", ")", "++", "--" }
+
+From the grammar, RegularExpressionLiteral may only follow tokens in BEFORE(Literal), where:
+
+BEFORE(Literal) = BEFORE(PrimaryExpression)
+BEFORE(PrimaryExpression) = BEFORE(MemberExpression)
+BEFORE(MemberExpression) = BEFORE(LeftHandSideExpression) U { "new" }
+BEFORE(LeftHandSideExpression) = BEFORE(PostfixExpression) U BEFORE(AssignmentExpression) U { "{" }
+BEFORE(PostfixExpression) = BEFORE(UnaryExpression) U { "delete", "void", "typeof", "++", "--", "+", "-", "~", "!" }
+BEFORE(UnaryExpression) = BEFORE(MultiplicativeExpression) U { "*", "/", "%" }
+BEFORE(MultiplicativeExpression) = BEFORE(AdditiveExpression) U { "+", "-" }
+BEFORE(AdditiveExpression) = BEFORE(ShiftExpression) U { "<<", ">>", ">>>" }
+BEFORE(ShiftExpression) = BEFORE(RelationalExpression) U { "<", ">", "<=", ">=", "instanceof", "in" }
+BEFORE(RelationalExpression) = BEFORE(EqualityExpression) U { "==", "!=", "===", "!==" }
+BEFORE(EqualityExpression) = BEFORE(BitwiseANDExpression) U { "&" }
+BEFORE(BitwiseANDExpression) = BEFORE(BitwiseXORExpression) U { "^" }
+BEFORE(BitwiseXORExpression) = BEFORE(BitwiseORExpression) U { "|" }
+BEFORE(BitwiseORExpression) = BEFORE(LogicalANDExpression) U { "&&" }
+BEFORE(LogicalANDExpression) = BEFORE(LogicalORExpression) U { "||" }
+BEFORE(LogicalORExpression) = BEFORE(AssignmentExpression)
+BEFORE(AssignmentExpression) = BEFORE(Expression) U { "?", ":", "=", "*=", "/=", "%=", "+=", "-=", "<<=", ">>=", ">>>=", "&=", "^=", "|=", ",", "=", ":", "(" }
+BEFORE(Expression) = BEFORE(Statement) U { "(", "[", "return", "throw", ";", "in", "case" }
+BEFORE(Statement) = LAST(Statement) U LAST(FunctionDeclaration) U { ")", "else", "do", ":", "{", ";" }
+LAST(Statement) = { "}", ";" }  // "}" from end of Block
+LAST(FunctionDeclaration) = { "}" }
+
+Thus:
+
+BEFORE(Literal) = { "new", "{", "delete", "void", "typeof", "++", "--", "+", "-", "~", "!",
+                    "*", "/", "%", "+", "-", "<<", ">>", ">>>", "<", ">", "<=", ">=", "instanceof", "in",
+                    "==", "!=", "===", "!==", "&", "^", "|", "&&", "||", "?", ":", "=", "*=", "/=", "%=",
+                    "+=", "-=", "<<=", ">>=", ">>>=", "&=", "^=", "|=", ",", "=", ":", "(", 
+                    "(", "[", "return", "throw", ";", "in", "case", ")", "else", "do", ":", ";", "}" }
+
+
+
+BEFORE("/", "/=") \inter BEFORE(Literal) = { "}", ")", "++", "--" }
+
+Thus we can't rely just on the previous token to decide how to lex a token beginning with "/". For example:
+
+var a = 4;
+var g = 5;
+var x = { f: 3 } /a/g;  // division
+try { } catch (e) { } /a/g;  // regexp
+
+Thus we must capture additional state to distinguish division and regular expressions.
+
+
+For "}" and ")" easy to distinguish expression level vs statement level in token itself.
+For "++" and "--", perfer division over regular expressions.
+

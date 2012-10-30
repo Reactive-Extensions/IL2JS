@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ribbon", "ribbon.csproj", "{E2DA2B4F-960D-4EC3-AECF-FE44B1566B2E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Collecting = Debug|Collecting
+		Debug|Plain = Debug|Plain
+		Debug|Traced = Debug|Traced
+		Release|Collecting = Release|Collecting
+		Release|Plain = Release|Plain
+		Release|Traced = Release|Traced
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E2DA2B4F-960D-4EC3-AECF-FE44B1566B2E}.Debug|Collecting.ActiveCfg = Debug|Collecting
+		{E2DA2B4F-960D-4EC3-AECF-FE44B1566B2E}.Debug|Collecting.Build.0 = Debug|Collecting
+		{E2DA2B4F-960D-4EC3-AECF-FE44B1566B2E}.Debug|Plain.ActiveCfg = Debug|Plain
+		{E2DA2B4F-960D-4EC3-AECF-FE44B1566B2E}.Debug|Plain.Build.0 = Debug|Plain
+		{E2DA2B4F-960D-4EC3-AECF-FE44B1566B2E}.Debug|Traced.ActiveCfg = Debug|Traced
+		{E2DA2B4F-960D-4EC3-AECF-FE44B1566B2E}.Debug|Traced.Build.0 = Debug|Traced
+		{E2DA2B4F-960D-4EC3-AECF-FE44B1566B2E}.Release|Collecting.ActiveCfg = Release|Collecting
+		{E2DA2B4F-960D-4EC3-AECF-FE44B1566B2E}.Release|Collecting.Build.0 = Release|Collecting
+		{E2DA2B4F-960D-4EC3-AECF-FE44B1566B2E}.Release|Plain.ActiveCfg = Release|Plain
+		{E2DA2B4F-960D-4EC3-AECF-FE44B1566B2E}.Release|Plain.Build.0 = Release|Plain
+		{E2DA2B4F-960D-4EC3-AECF-FE44B1566B2E}.Release|Traced.ActiveCfg = Release|Traced
+		{E2DA2B4F-960D-4EC3-AECF-FE44B1566B2E}.Release|Traced.Build.0 = Release|Traced
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

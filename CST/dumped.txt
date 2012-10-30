@@ -1,0 +1,2350 @@
+﻿        public override TypeStyle Style { get { return Def.Style; } }
+        public override PointerTypeStyle PointerStyle { get { return Def.PointerStyle; } }
+        public override CodePointerTypeStyle CodePointerStyle { get { return Def.CodePointerStyle; } }
+        public override ValueTypeStyle ValueStyle { get { return Def.ValueStyle; } }
+        public override NumberTypeStyle NumberStyle { get { return Def.NumberStyle; } }
+        public override HandleTypeStyle HandleStyle { get { return Def.HandleStyle; } }
+        public override ReferenceTypeStyle ReferenceStyle { get { return Def.ReferenceStyle; } }
+
+        public abstract TypeStyle Style { get; }
+        public abstract PointerTypeStyle PointerStyle { get; }
+        public abstract CodePointerTypeStyle CodePointerStyle { get; }
+        public abstract ValueTypeStyle ValueStyle { get; }
+        public abstract NumberTypeStyle NumberStyle { get; }
+        public abstract HandleTypeStyle HandleStyle { get; }
+        public abstract ReferenceTypeStyle ReferenceStyle { get; }
+
+
+
+        public virtual MachineState EntryState { get { return EntryStackFrom(new HashSet<BasicBlock>()); } }
+
+        public virtual MachineState ExitState { get { return ExitStackFrom(new HashSet<BasicBlock>()); } }
+
+        private MachineState EntryStackFrom(HashSet<BasicBlock> visited)
+        {
+            if (visited.Contains(this))
+                return null;
+            else
+            {
+                visited.Add(this);
+                if (Block.Count == 0)
+                {
+                    if (Sources.Count == 0)
+                        throw new InvalidOperationException("block has no sources");
+                    for (var i = 0; i < Sources.Count; i++)
+                    {
+                        var res = Sources[i].ExitStackFrom(visited);
+                        if (res != null)
+                            return res;
+                    }
+                    throw new InvalidOperationException("loop with no entry point");
+                }
+                else
+                    return Block[0].BeforeState;
+            }
+        }
+
+        private MachineState ExitStackFrom(HashSet<BasicBlock> visited)
+        {
+            if (Block.Count == 0)
+            {
+                var res = EntryStackFrom(visited);
+                if (res == null)
+                    return null;
+                else
+                    return res.Pop(ExitStackPopCount);
+            }
+            else
+                return Block[Block.Count - 1].AfterState.Pop(ExitStackPopCount);
+        }
+
+        public virtual List<TypeRef> DelegateValueParameters(RootEnvironment rootEnv)
+        {
+            throw new InvalidOperationException("type is not a delegate type");
+        }
+
+        public virtual TypeRef DelegateResult(RootEnvironment rootEnv)
+        {
+            throw new InvalidOperationException("type is not a delegate type");
+        }
+
+        public virtual TypeRef EnumImplementation(RootEnvironment rootEnv)
+        {
+            throw new InvalidOperationException("type is not an enum type");
+        }
+
+        public virtual Dictionary<string, object> EnumConstructors(RootEnvironment rootEnv)
+        {
+            throw new InvalidOperationException("type is not an enum type");
+        }
+
+
+    public class ProductDomain<T, U, V, W> : IDomain<ProductDomain<T, U, V, W>>
+        where T : class, IDomain<T>
+        where U : class, IDomain<U>
+        where V : class, IDomain<V>
+        where W : class, IDomain<W>
+    {
+        public readonly T TValue;
+        public readonly U UValue;
+        public readonly V VValue;
+        public readonly W WValue;
+
+        public ProductDomain(T tValue, U uValue, V vValue, W wValue)
+        {
+            TValue = tValue;
+            UValue = uValue;
+            VValue = vValue;
+            WValue = wValue;
+        }
+
+        public bool Lte(ProductDomain<T, U, V, W> other)
+        {
+            return TValue.Lte(other.TValue) && UValue.Lte(other.UValue) && VValue.Lte(other.VValue) &&
+                   WValue.Lte(other.WValue);
+        }
+
+        public ProductDomain<T, U, V, W> Lub(ProductDomain<T, U, V, W> other)
+        {
+            var t = TValue.Lub(other.TValue);
+            var u = UValue.Lub(other.UValue);
+            var v = VValue.Lub(other.VValue);
+            var w = WValue.Lub(other.WValue);
+            if (t == null || u == null || v == null || w == null)
+                return null;
+            return new ProductDomain<T, U, V, W>(t, u, v, w);
+        }
+
+        public bool CommutableWith(ProductDomain<T, U, V, W> other)
+        {
+            if (!TValue.CommutableWith(other.TValue))
+                return false;
+            if (!UValue.CommutableWith(other.UValue))
+                return false;
+            if (!VValue.CommutableWith(other.VValue))
+                return false;
+            if (!WValue.CommutableWith(other.WValue))
+                return false;
+            return true;
+        }
+
+        public bool IsBottom
+        {
+            get
+            {
+                return TValue.IsBottom && UValue.IsBottom && VValue.IsBottom && WValue.IsBottom;
+            }
+        }
+
+        public void Append(Writer w)
+        {
+            w.Append('(');
+            TValue.Append(w);
+            w.Append(',');
+            UValue.Append(w);
+            w.Append(',');
+            VValue.Append(w);
+            w.Append(',');
+            WValue.Append(w);
+            w.Append(')');
+        }
+
+        public override string ToString()
+        {
+            return Writer.WithAppendDebug(Append);
+        }
+    }
+
+
+
+    public class ProductDomain<T, U, V> : IDomain<ProductDomain<T, U, V>>
+        where T : class, IDomain<T>
+        where U : class, IDomain<U>
+        where V : class, IDomain<V>
+    {
+        public readonly T TValue;
+        public readonly U UValue;
+        public readonly V VValue;
+
+        public ProductDomain(T tValue, U uValue, V vValue)
+        {
+            TValue = tValue;
+            UValue = uValue;
+            VValue = vValue;
+        }
+
+        public bool Lte(ProductDomain<T, U, V> other)
+        {
+            return TValue.Lte(other.TValue) && UValue.Lte(other.UValue) && VValue.Lte(other.VValue);
+        }
+
+        public ProductDomain<T, U, V> Lub(ProductDomain<T, U, V> other)
+        {
+            var t = TValue.Lub(other.TValue);
+            var u = UValue.Lub(other.UValue);
+            var v = VValue.Lub(other.VValue);
+            if (t == null || u == null || v == null)
+                return null;
+            return new ProductDomain<T, U, V>(t, u, v);
+        }
+
+        public bool CommutableWith(ProductDomain<T, U, V> other)
+        {
+            if (!TValue.CommutableWith(other.TValue))
+                return false;
+            if (!UValue.CommutableWith(other.UValue))
+                return false;
+            if (!VValue.CommutableWith(other.VValue))
+                return false;
+            return true;
+        }
+
+        public bool IsBottom
+        {
+            get
+            {
+                return TValue.IsBottom && UValue.IsBottom && VValue.IsBottom;
+            }
+        }
+
+        public void Append(Writer w)
+        {
+            w.Append('(');
+            TValue.Append(w);
+            w.Append(',');
+            UValue.Append(w);
+            w.Append(',');
+            VValue.Append(w);
+            w.Append(')');
+        }
+
+        public override string ToString()
+        {
+            return Writer.WithAppendDebug(Append);
+        }
+    }
+
+
+
+        private bool TranslateTest(List<Statement> statements, ref Effects accumEffects, Test test, StackExpression stack)
+        {
+            switch (test.Op)
+            {
+                case TestOp.True:
+                    if (test.Type.Equals(compEnv.Global.BooleanRef) || test.Type.Equals(compEnv.Global.Int32Ref))
+                        return true;
+                    else
+                        return stack.PopEvalPush
+                            (statements,
+                             ref accumEffects,
+                             1,
+                             true,
+                             (a, e) =>
+                             new StackExpressionEntry
+                                 (new BinaryExpression
+                                      (a[0], BinaryOp.Ne, ZeroForType(test.Type), false, test.IsUnsigned),
+                                  e));
+                case TestOp.False:
+                    if (test.Type.Equals(compEnv.Global.BooleanRef) || test.Type.Equals(compEnv.Global.Int32Ref))
+                        return stack.PopEvalPush
+                            (statements,
+                             ref accumEffects,
+                             1,
+                             true,
+                             (a, e) =>
+                             new StackExpressionEntry(new UnaryExpression(a[0], UnaryOp.Not, false, false), e));
+                    else
+                        return stack.PopEvalPush
+                            (statements,
+                             ref accumEffects,
+                             1,
+                             true,
+                             (a, e) =>
+                             new StackExpressionEntry
+                                 (new BinaryExpression
+                                      (a[0], BinaryOp.Eq, ZeroForType(test.Type), false, test.IsUnsigned),
+                                  e));
+                case TestOp.Equal:
+                    return stack.PopEvalPush
+                        (statements,
+                         ref accumEffects,
+                         2,
+                         true,
+                         (a, e) =>
+                         new StackExpressionEntry
+                             (new BinaryExpression(a[0], BinaryOp.Eq, a[1], false, test.IsUnsigned), e));
+                case TestOp.NotEqual:
+                    return stack.PopEvalPush
+                        (statements,
+                         ref accumEffects,
+                         2,
+                         true,
+                         (a, e) =>
+                         new StackExpressionEntry
+                             (new BinaryExpression(a[0], BinaryOp.Ne, a[1], false, test.IsUnsigned), e));
+                case TestOp.LessThanOrEqual:
+                    return stack.PopEvalPush
+                        (statements,
+                         ref accumEffects,
+                         2,
+                         true,
+                         (a, e) =>
+                         new StackExpressionEntry
+                             (new BinaryExpression(a[0], BinaryOp.Le, a[1], false, test.IsUnsigned), e));
+                case TestOp.LessThan:
+                    return stack.PopEvalPush
+                        (statements,
+                         ref accumEffects,
+                         2,
+                         true,
+                         (a, e) =>
+                         new StackExpressionEntry
+                             (new BinaryExpression(a[0], BinaryOp.Lt, a[1], false, test.IsUnsigned), e));
+                case TestOp.GreaterThanOrEqual:
+                    return stack.PopEvalPush
+                        (statements,
+                         ref accumEffects,
+                         2,
+                         true,
+                         (a, e) =>
+                         new StackExpressionEntry
+                             (new BinaryExpression(a[0], BinaryOp.Ge, a[1], false, test.IsUnsigned), e));
+                case TestOp.GreaterThan:
+                    return stack.PopEvalPush
+                        (statements,
+                         ref accumEffects,
+                         2,
+                         true,
+                         (a, e) =>
+                         new StackExpressionEntry
+                             (new BinaryExpression(a[0], BinaryOp.Gt, a[1], false, test.IsUnsigned), e));
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+
+        private List<Statement> BlockToConditionStatements(InstructionBlock block, Test test, MachineState postTestState, ref Effects accumEffects, out StackExpressionEntry condEntry)
+        {
+            if (block.Count == 0)
+                throw new InvalidOperationException("empty instruction block");
+            // Begin with stack as saved in stack entry temporaries
+            var stack = new StackExpression(compEnv, BottomE, gensym, block.BeforeState);
+            var statements = new List<Statement>();
+            if (!TranslateBlock(statements, ref accumEffects, block, stack))
+            {
+                condEntry = null;
+                return null;
+            }
+            // Eval test
+            if (!TranslateTest(statements, ref accumEffects, test, stack))
+            {
+                condEntry = null;
+                return null;
+            }
+            // Pop test result and save rest of stack to stack entry temporaries
+            condEntry = stack.FlushAndPopPostState(statements, ref accumEffects, postTestState);
+            if (condEntry == null)
+                return null;
+            return statements;
+        }
+
+
+
+    public class ArgLocalState
+    {
+        [NotNull]
+        public PointsTo PointsTo;
+        public BooleanDomain IsAlive;
+
+        public ArgLocalState(PointsTo pointsTo, BooleanDomain isAlive)
+        {
+            PointsTo = pointsTo;
+            IsAlive = isAlive;
+        }
+
+        public bool Lte(ArgLocalState other)
+        {
+            return PointsTo.Lte(other.PointsTo) && IsAlive.Lte(other.IsAlive);
+        }
+
+        public bool Unify(ArgLocalState other)
+        {
+            var changed = !Lte(other) || !other.Lte(this);
+            if (changed)
+            {
+                PointsTo = PointsTo.Lub(other.PointsTo);
+                IsAlive = IsAlive.Lub(other.IsAlive);
+            }
+            return changed;
+        }
+
+        public bool UnifyPointsTo(PointsTo other)
+        {
+            var changed = !PointsTo.Lte(other) || !other.Lte(PointsTo);
+            if (changed)
+                PointsTo = PointsTo.Lub(other);
+            return changed;
+        }
+
+        public bool UnifyIsAlive(BooleanDomain other)
+        {
+            var changed = !IsAlive.Lte(other) || !other.Lte(IsAlive);
+            if (changed)
+                IsAlive = IsAlive.Lub(other);
+            return changed;
+        }
+
+        public void Append(Writer w)
+        {
+            w.Append("{pointsTo=");
+            if (PointsTo.IsBottom)
+                w.Append("_|_");
+            else
+                PointsTo.Append(w);
+            w.Append(",isAlive=");
+            IsAlive.Append(w);
+            w.Append('}');
+        }
+    }
+
+
+        public bool Lte(ArgsLocalsState other)
+        {
+            if (argsAlive.Capacity != other.argsAlive.Capacity || localsAlive.Capacity != other.localsAlive.Capacity)
+                throw new InvalidOperationException("mismatched args or locals counts");
+
+            foreach (var kv in argLocalToPointsTo)
+            {
+                if (!kv.Value.IsBottom)
+                {
+                    var pt = default(PointsTo);
+                    if (!other.argLocalToPointsTo.TryGetValue(kv.Key, out pt) || !kv.Value.Lte(pt))
+                        return false;
+                }
+            }
+
+            if (!argsAlive.IsSubset(other.argsAlive))
+                return false;
+
+            if (!localsAlive.IsSubset(other.localsAlive))
+                return false;
+
+            return true;
+        }
+
+
+
+    //
+    // IfThenElse
+    //
+
+    [Immutable]
+    public class IFEConditionInstructionContext : InstructionContext
+    {
+        public IFEConditionInstructionContext(InstructionContext parentContext, int parentIndex, InstructionBlock block)
+            : base(parentContext, parentIndex, block)
+        {
+        }
+    }
+
+    [Immutable]
+    public class IFEThenInstructionContext : InstructionContext
+    {
+        public IFEThenInstructionContext(InstructionContext parentContext, int parentIndex, InstructionBlock block)
+            : base(parentContext, parentIndex, block)
+        {
+        }
+    }
+
+    [Immutable]
+    public class IFEElseInstructionContext : InstructionContext
+    {
+        public IFEElseInstructionContext(InstructionContext parentContext, int parentIndex, InstructionBlock block)
+            : base(parentContext, parentIndex, block)
+        {
+        }
+    }
+
+    //
+    // ShortCircuiting
+    //
+
+    [Immutable]
+    public class SCLeftInstructionContext : InstructionContext
+    {
+        public SCLeftInstructionContext(InstructionContext parentContext, int parentIndex, InstructionBlock block)
+            : base(parentContext, parentIndex, block)
+        {
+        }
+    }
+
+    [Immutable]
+    public class SCRightInstructionContext : InstructionContext
+    {
+        public SCRightInstructionContext(InstructionContext parentContext, int parentIndex, InstructionBlock block)
+            : base(parentContext, parentIndex, block)
+        {
+        }
+    }
+
+    //
+    // StructuralSwitch
+    //
+
+    [Immutable]
+    public class SSBodyInstructionContext : InstructionContext
+    {
+        public SSBodyInstructionContext(InstructionContext parentContext, int parentIndex, InstructionBlock block)
+            : base(parentContext, parentIndex, block)
+        {
+        }
+
+    }
+
+    [Immutable]
+    public class SSCaseInstructionContext : InstructionContext
+    {
+        public readonly int CaseIndex;
+
+        public SSCaseInstructionContext(InstructionContext parentContext, int parentIndex, InstructionBlock block, int caseIndex)
+            : base(parentContext, parentIndex, block)
+        {
+            CaseIndex = caseIndex;
+        }
+    }
+
+    //
+    // Loop
+    //
+
+    [Immutable]
+    public class LoopBodyInstructionContext : InstructionContext
+    {
+        public LoopBodyInstructionContext(InstructionContext parentContext, int parentIndex, InstructionBlock block)
+            : base(parentContext, parentIndex, block)
+        {
+        }
+    }
+
+    //
+    // WhileDo
+    //
+
+    [Immutable]
+    public class WDConditionInstructionContext : InstructionContext
+    {
+        public WDConditionInstructionContext(InstructionContext parentContext, int parentIndex, InstructionBlock block)
+            : base(parentContext, parentIndex, block)
+        {
+        }
+
+    }
+
+    [Immutable]
+    public class WDBodyInstructionContext : InstructionContext
+    {
+        public WDBodyInstructionContext(InstructionContext parentContext, int parentIndex, InstructionBlock block)
+            : base(parentContext, parentIndex, block)
+        {
+        }
+    }
+
+    //
+    // DoWhile
+    //
+
+    [Immutable]
+    public class DWConditionInstructionContext : InstructionContext
+    {
+        public DWConditionInstructionContext(InstructionContext parentContext, int parentIndex, InstructionBlock block)
+            : base(parentContext, parentIndex, block)
+        {
+        }
+    }
+
+
+                            // Control could transfer:
+                            //  - to the next outer finally or fault block (if in a finally or fault block)
+                            //  - to the target of the leave from within a try block which triggered this
+                            //    finally block (if in a finally block)
+                            var handlerContext = context as TryHandlerInstructionContext;
+                            if (handlerContext == null)
+                                throw new InvalidOperationException("not in handler context");
+                            var handler = handlerContext.Handler;
+                            if (handler.Flavor == HandlerFlavor.Fault || handler.Flavor == HandlerFlavor.Finally)
+                            {
+                                var outerHandlerContext = handlerContext.OuterFinallyOrFault;
+                                while (outerHandlerContext != null)
+                                {
+                                    if (outerHandlerContext.HasBody)
+                                        PropogateStateToBefore(newState, outerHandlerContext.Block[0].Offset, changed);
+                                    outerHandlerContext = outerHandlerContext.OuterFinallyOrFault;
+                                }
+                            }
+                            if (handler.Flavor == HandlerFlavor.Finally)
+                            {
+                                var changed2 = new BoolRef();
+                                handlerContext.Try.VisitInnerNonStructuralInstructions
+                                    (i =>
+                                         {
+                                             var bri = i as BranchInstruction;
+                                             if (bri != null && bri.Op == BranchOp.Leave)
+                                                 PropogateStateToBefore(newState, bri.Target, changed2);
+                                         });
+                                if (changed2.Value)
+                                    changed.Set();
+                            }
+                            return newState;
+
+
+        public void VisitNonStructuralInstructions(Action<Instruction> f)
+        {
+            if (!IsStructural)
+                f(this);
+            VisitInnerNonStructuralInstructions(f);
+        }
+
+        public abstract void VisitInnerNonStructuralInstructions(Action<Instruction> f);
+
+
+
+                                        else
+                                        {
+                                            // stloc.n; ldloc.n (where local n is alive) ==> dup; stloc.n
+                                            // starg.n; ldarg.n (where arg n is alive) ==> dup; starg.n
+                                            var state0 = argloci.BeforeState;
+                                            var state1 = state0.Push(argloci.BeforeState.Peek(0));
+                                            var state2 = arglocj.AfterState;
+                                            var dummy = new BoolRef();
+                                            state0.PropogateBackwards(state1, dummy);
+                                            state1.PropogateBackwards(state2, dummy);
+                                            lookahead[0] = new MiscInstruction(argloci.Offset, MiscOp.Dup)
+                                                               { BeforeState = state0, AfterState = state1 };
+                                            lookahead[1] = new ArgLocalInstruction
+                                                (arglocj.Offset, ArgLocalOp.St, argloci.ArgLocal, arglocj.Index)
+                                                               { BeforeState = state1, AfterState = state2 };
+                                            Trace(2, argloci, arglocj);
+                                            rewritten = true;
+                                        }
+
+
+
+        private MemberEnvironment EnterIntroducingMethodDefinitionOrThis(MemberEnvironment memberEnv)
+        {
+            for (var i = 0; i < Overrides.Count; i++)
+            {
+                var overrideEnv = Overrides[i].Enter(memberEnv);
+                if (overrideEnv.Type.Flavor != TypeDefFlavor.Interface)
+                    return overrideEnv.Method.EnterIntroducingMethodDefinitionOrThis(overrideEnv);
+            }
+            return memberEnv;
+        }
+
+        // The method definition of supertype which introduced the virtual method slot which this definition
+        // overrides, or null if definition does not override another.
+        public MemberEnvironment EnterIntroducingMethodDefinition(TypeEnvironment typeEnv)
+        {
+            for (var i = 0; i < Overrides.Count; i++)
+            {
+                var overrideEnv = Overrides[i].Enter(typeEnv);
+                if (overrideEnv.Type.Flavor != TypeDefFlavor.Interface)
+                    return overrideEnv.Method.EnterIntroducingMethodDefinitionOrThis(overrideEnv);
+            }
+            return null;
+        }
+
+
+
+    // ----------------------------------------------------------------------
+    // BuiltinTypeRef
+    // ----------------------------------------------------------------------
+
+    // NOTE: The definition must always be saturated by the right number of type arguments. Ie we do not
+    //       allow type refs to higher-kinded builtin type constructors. No partial applications are allowed.
+
+    public class BuiltinTypeRef : TypeRef
+    {
+        [NotNull]
+        public readonly BuiltinTypeDef Def;
+        [NotNull]
+        protected IImAList<TypeRef> arguments;
+
+        public BuiltinTypeRef(IImAList<Annotation> annotations, BuiltinTypeDef def, IImAList<TypeRef> arguments) : base(annotations)
+        {
+            Def = def;
+            this.arguments = arguments ?? Constants.EmptyTypeRefs;
+        }
+
+        public BuiltinTypeRef(BuiltinTypeDef def, IImAList<TypeRef> arguments) : this(null, def, arguments)
+        {
+        }
+
+        public BuiltinTypeRef(IImAList<Annotation> annotations, BuiltinTypeDef def, params TypeRef[] arguments) : base(annotations)
+        {
+            Def = def;
+            this.arguments = arguments == null || arguments.Length == 0 ? Constants.EmptyTypeRefs : new AList<TypeRef>(arguments);
+        }
+
+        public BuiltinTypeRef(BuiltinTypeDef def, params TypeRef[] arguments) : this(null, def, arguments)
+        {
+        }
+
+        public override uint Tag { get { return Def.Tag; } }
+
+        public override QualifiedTypeName Name
+        {
+            get
+            {
+                throw new InvalidOperationException("built-in types do not have qualified type names");
+            }
+        }
+
+        public override uint HashBody()
+        {
+            return arguments.Aggregate(0u, (current, t) => Rot3(current) ^ (uint)t.GetHashCode());
+        }
+
+        public override bool Equals(TypeRef other)
+        {
+            var otherBuiltin = other as BuiltinTypeRef;
+            if (otherBuiltin == null)
+                return false;
+            if (Def.Flavor != otherBuiltin.Def.Flavor)
+                return false;
+            if (arguments.Count != otherBuiltin.arguments.Count)
+                return false;
+            return !arguments.Where((t, i) => !Equals(t, otherBuiltin.arguments[i])).Any();
+        }
+
+        protected override int CompareToSameTag(TypeRef other)
+        {
+            var otherBuiltin = (BuiltinTypeRef)other;
+            return CompareLists(arguments, otherBuiltin.arguments);
+        }
+
+        public override TypeRefFlavor Flavor { get { return TypeRefFlavor.Builtin; } }
+
+        public override IImAList<TypeRef> Arguments { get { return arguments; } }
+
+        public override TypeStyle Style(RootEnvironment rootEnv)
+        {
+            return Def.Style;
+        }
+
+        public override TypeRef WithAnnotations(IImAList<Annotation> annotations)
+        {
+            return new BuiltinTypeRef(Annotations.Concat(annotations).ToAList(), Def, arguments);
+        }
+
+        public override TypeRef WithArguments(IImAList<TypeRef> newArguments)
+        {
+            return new BuiltinTypeRef(Annotations, Def, newArguments ?? Constants.EmptyTypeRefs);
+        }
+
+        public override TypeRef Substitute(IImAList<TypeRef> typeBoundArguments, IImAList<TypeRef> methodBoundArguments)
+        {
+            return new BuiltinTypeRef(Def, arguments.Select(t => t.Substitute(typeBoundArguments, methodBoundArguments)).ToAList());
+        }
+
+        public override TypeRef Generalize()
+        {
+            return new BuiltinTypeRef(Def, arguments.Select(t => t.Generalize()).ToAList());
+        }
+
+        public override TypeRef ForgetArguments()
+        {
+            if (arguments.Count > 0)
+                throw new InvalidOperationException("cannot forget arguments to higher-kinded built-in type constructors");
+            return this;
+        }
+
+        public override bool IsGround { get { return arguments.All(t => t.IsGround); } }
+
+        public override TypeConstructorEnvironment EnterConstructor(RootEnvironment rootEnv)
+        {
+            var groundEnv = new RootEnvironment(rootEnv);
+            return new TypeConstructorEnvironment
+                (groundEnv, groundEnv.Global.ResolveAssembly(groundEnv.Global.MsCorLibName), Def);
+        }
+
+        public override TypeEnvironment Enter(RootEnvironment rootEnv)
+        {
+            var groundArguments = rootEnv.SubstituteTypes(arguments);
+            var groundEnv = new RootEnvironment(rootEnv);
+            Def.ValidateInstance(groundEnv, groundArguments);
+            return new TypeEnvironment
+                (groundEnv, groundEnv.Global.ResolveAssembly(groundEnv.Global.MsCorLibName), Def, groundArguments);
+        }
+
+        public override TypeRef ToRunTimeType(RootEnvironment rootEnv, bool forStack)
+        {
+            if (Def is PointerTypeDef || Def is ArrayTypeDef || Def is BoxTypeDef)
+                return new BuiltinTypeRef(Def, arguments.Select(t => t.ToRunTimeType(rootEnv, false)).ToAList());
+            else
+                return this;
+        }
+
+        public override void Append(Writer w)
+        {
+            Def.AppendReference(w, arguments);
+        }
+    }
+
+
+
+        public TypeConstructorEnvironment EnterConstructor(AssemblyEnvironment assmEnv)
+        {
+            return assmEnv.AddType(this);
+        }
+
+        public TypeEnvironment Enter(AssemblyEnvironment assmEnv)
+        {
+            var typeBoundArguments =
+                Parameters.Select((t, i) => new SkolemTypeRef(ParameterFlavor.Type, i)).Cast<TypeRef>().ToAList();
+            var skolemTypeBindings = Parameters.Select(p => p.Substitute(typeBoundArguments, null)).ToAList();
+            var newAssmEnv = (AssemblyEnvironment)assmEnv.ReplaceSkolemBindings(skolemTypeBindings, null);
+            return newAssmEnv.AddType(this).AddTypeBoundArguments(typeBoundArguments);
+        }
+
+
+
+        public TypeConstructorMemberEnvironment EnterConstructor(TypeConstructorEnvironment tyconEnv)
+        {
+            return tyconEnv.AddMember(this);
+        }
+
+        public MemberEnvironment Enter(TypeEnvironment typeEnv)
+        {
+            return typeEnv.AddMember(this);
+        }
+
+
+
+        public IImAList<TypeRef> Supertypes(AssemblyEnvironment assmEnv)
+        {
+            var res = new AList<TypeRef>();
+            var thisEnv = Enter(assmEnv);
+            var super = PrimExtends(assmEnv, thisEnv.TypeBoundArguments);
+            while (super != null)
+            {
+                res.Add(super);
+                thisEnv = super.Enter(assmEnv.ForgetSubstitution());
+                super = thisEnv.Type.PrimExtends(assmEnv.ForgetSubstitution(), thisEnv.TypeBoundArguments);
+            }
+            return res;
+        }
+
+
+
+    // Given a method M in type C<T> with signature such as:
+    //    M<U>(T arg1, U arg2)
+    // then we have two forms of polymorphic method refs to M in type C<D>:
+    //  - INTERNAL: From p.o.v. inside the method definition:
+    //      C<D>::M<U>(T arg1, U arg2)
+    //    All type-bound and method-bound parameters in the method arguments and result types remain free.
+    //    This is the form used when refering to a method to call since it has not lost information by
+    //    subsituting out T.
+    //  - EXTERNAL: From global p.o.v.:
+    //      C<D>::M<U>(D arg1, U arg2)
+    //    All type-bound type parameters have been substituted with their actual types (but any method-bound
+    //    type parameters remain free). This is the form used when matching methods since it represents the
+    //    actual signature of the call.
+
+
+        public PolymorphicMethodRef External
+        {
+            get
+            {
+                var typeBoundArguments = DefiningType.Arguments;
+                return new PolymorphicMethodRef
+                    (Annotations,
+                     DefiningType,
+                     Name,
+                     IsStatic,
+                     MethodTypeArity,
+                     ValueParameters.Select(t => t.Substitute(typeBoundArguments, null)).ToAList(),
+                     Result == null ? null : Result.Substitute(typeBoundArguments, null));
+            }
+        }
+
+
+
+    // ----------------------------------------------------------------------
+    // MultiDimArrayRef
+    // ----------------------------------------------------------------------
+
+    public class MultiDimArrayRef : TypeRef
+    {
+        [NotNull]
+        public readonly TypeRef ElementType;
+        [NotNull]
+
+
+        public MultiDimArrayRef(IImSeq<Annotation> annotations, TypeRef elementType, IImSeq<int> sizes, IImSeq<int> lowerBounds)
+            : base(annotations)
+        {
+            ElementType = elementType;
+            Sizes = sizes;
+            LowerBounds = lowerBounds;
+        }
+
+        public MultiDimArrayRef(TypeRef elementType, IImSeq<int> sizes, IImSeq<int> lowerBounds)
+            : this(null, elementType, sizes, lowerBounds)
+        {
+        }
+
+        public override QualifiedTypeName Name
+        {
+            get { throw new InvalidOperationException("multi-dimensional array types have no name"); }
+        }
+
+        public override int GetHashCode()
+        {
+            var res = 0xfd238760u;
+            res ^= (uint)ElementType.GetHashCode();
+            for (var i = 0; i < Sizes.Count; i++)
+            {
+                res = Constants.Rot3(res) ^ (uint)Sizes[i];
+                res = Constants.Rot7(res) ^ (uint)LowerBounds[i];
+            }
+            return (int)res;
+        }
+
+        public override bool Equals(TypeRef other)
+        {
+            var otherMulti = other as MultiDimArrayRef;
+            if (otherMulti == null)
+                return false;
+            if (!ElementType.Equals(otherMulti.ElementType))
+                return false;
+            if (Sizes.Count != otherMulti.Sizes.Count)
+                return false;
+            for (var i = 0; i < Sizes.Count; i++)
+            {
+                if (Sizes[i] != otherMulti.Sizes[i] || LowerBounds[i] != otherMulti.LowerBounds[i])
+                    return false;
+            }
+            return true;
+        }
+
+        protected override int CompareToSameBody(TypeRef other)
+        {
+            var otherMulti = (MultiDimArrayRef)other;
+            var i = ElementType.CompareTo(otherMulti.ElementType);
+            if (i != 0)
+                return i;
+            i = Sizes.Count.CompareTo(otherMulti.Sizes.Count);
+            if (i != 0)
+                return i;
+            for (var j = 0; j < Sizes.Count; j++)
+            {
+                i = Sizes[j].CompareTo(otherMulti.Sizes[j]);
+                if (i != 0)
+                    return i;
+                i = LowerBounds[j].CompareTo(otherMulti.LowerBounds[j]);
+                if (i != 0)
+                    return i;
+            }
+            return 0;
+        }
+
+        public override TypeRefFlavor Flavor { get { return TypeRefFlavor.MultiDimArray; } }
+
+        public override IImSeq<TypeRef> Arguments { get { return new Seq<TypeRef> { ElementType }; } }
+
+        public override TypeStyle Style(RootEnvironment rootenv)
+        {
+            return TypeStyles.MultiDimArray();
+        }
+
+        public override TypeRef WithAnnotations(IImSeq<Annotation> annotations)
+        {
+            return new MultiDimArrayRef(Annotations.Concat(annotations).ToSeq(), ElementType, Sizes, LowerBounds);
+        }
+
+        public override TypeRef WithArguments(IImSeq<TypeRef> newArguments)
+        {
+            if (newArguments.Count != 1)
+                throw new InvalidOperationException("mismatched type arity");
+            return new MultiDimArrayRef(Annotations, newArguments[0], Sizes, LowerBounds);
+        }
+
+        public override TypeRef PrimSubstitute(IImSeq<TypeRef> typeBoundArguments, IImSeq<TypeRef> methodBoundArguments)
+        {
+            return new MultiDimArrayRef(Annotations, ElementType.PrimSubstitute(typeBoundArguments, methodBoundArguments), Sizes, LowerBounds);
+        }
+
+        public override TypeRef Generalize()
+        {
+            return new MultiDimArrayRef(Annotations, ElementType.Generalize(), Sizes, LowerBounds);
+        }
+
+        public override TypeRef ToConstructor()
+        {
+            return this;
+        }
+
+        public override bool IsGround { get { return ElementType.IsGround; } }
+
+        public override void PrimResolve(GroundEnv groundEnv, out AssemblyDef assemblyDef, out TypeDef typeDef)
+        {
+            throw new InvalidOperationException("multi-dimensional arrays have no definition");
+        }
+
+        public override TypeConstructorEnvironment EnterConstructor(RootEnvironment rootEnv)
+        {
+            throw new InvalidOperationException("multi-dimensional arrays have no definition");
+        }
+
+        public override TypeEnvironment Enter(RootEnvironment rootEnv)
+        {
+            throw new InvalidOperationException("multi-dimensional arrays have no definition");
+        }
+
+        public override TypeRef ToRunTimeType(RootEnvironment rootEnv, bool forStack)
+        {
+            return new MultiDimArrayRef(Annotations, ElementType.ToRunTimeType(rootEnv, forStack), Sizes, LowerBounds);
+        }
+
+        public override void Append(CSTWriter w)
+        {
+            ElementType.Append(w);
+            w.Append('[');
+            for (var i = 0; i < Sizes.Count; i++)
+            {
+                if (i > 0)
+                    w.Append(',');
+                w.Append(LowerBounds[i]);
+                w.Append("...");
+                if (Sizes[i] > 0)
+                    w.Append(LowerBounds[i] + Sizes[i] - 1);
+            }
+            w.Append(']');
+        }
+    }
+
+        // Append instructions to evaluate test to its boolean result, leaving an int32 on the stack.
+        // beforeState has test operands on stack. afterState has the test evaluated AND the resulting
+        // int32 consumed. (These states came from the original brtrue, etc instruction). Return the
+        // state after the test has been evaluated, but before the int32 is popped.
+        public MachineState Eval(InstructionBlock block, MachineState beforeState, MachineState afterState, PointsTo bottom)
+        {
+            var rootEnv = beforeState.RootEnv;
+            var dummy = new BoolRef();
+            switch (Op)
+            {
+            case TestOp.True:
+                {
+                    var s = Type.Style(rootEnv);
+                    if (s is Int32TypeStyle)
+                        return beforeState;
+                    else
+                    {
+                        var state1 = default(MachineState);
+                        if (s is Int64TypeStyle)
+                        {
+                            state1 = beforeState.PushType(rootEnv.Global.Int64Ref, bottom);
+                            block.Add
+                                (new LdInt64Instruction(-1, 0) { BeforeState = beforeState, AfterState = state1 });
+                        }
+                        else if (s is ReferenceTypeStyle)
+                        {
+                            state1 = beforeState.PushType(rootEnv.Global.NullRef, bottom);
+                            block.Add
+                                (new MiscInstruction(-1, MiscOp.Ldnull)
+                                     { BeforeState = beforeState, AfterState = state1 });
+                        }
+                        else
+                            throw new InvalidOperationException("invalid test for true/false");
+                        var state2 = state1.PopPushType(2, rootEnv.Global.Int32Ref, bottom);
+                        block.Add
+                            (new CompareInstruction(-1, CompareOp.Ceq, false)
+                                 { BeforeState = state1, AfterState = state2, Type = Type });
+                        var state3 = state2.PopPushType(1, rootEnv.Global.Int32Ref, bottom);
+                        block.Add(new LdInt32Instruction(-1, 0) { BeforeState = state2, AfterState = state3 });
+                        var state4 = state3.PopPushType(1, rootEnv.Global.Int32Ref, bottom);
+                        block.Add
+                            (new CompareInstruction(-1, CompareOp.Ceq, false)
+                                 { BeforeState = state3, AfterState = state4, Type = rootEnv.Global.Int32Ref });
+                        state4.PropogateBackwards(afterState, dummy);
+                        state3.PropogateBackwards(state4, dummy);
+                        state2.PropogateBackwards(state3, dummy);
+                        state1.PropogateBackwards(state2, dummy);
+                        beforeState.PropogateBackwards(state1, dummy);
+                        return state3;
+                    }
+                }
+            case TestOp.False:
+                {
+                    var s = Type.Style(rootEnv);
+                    var state1 = default(MachineState);
+                    if (s is Int32TypeStyle)
+                    {
+                        state1 = beforeState.PushType(rootEnv.Global.Int32Ref, bottom);
+                        block.Add(new LdInt32Instruction(-1, 0) { BeforeState = beforeState, AfterState = state1 });
+                    }
+                    else if (s is Int64TypeStyle)
+                    {
+                        state1 = beforeState.PushType(rootEnv.Global.Int64Ref, bottom);
+                        block.Add(new LdInt64Instruction(-1, 0) { BeforeState = beforeState, AfterState = state1 });
+                    }
+                    else if (s is ReferenceTypeStyle)
+                    {
+                        state1 = beforeState.PushType(rootEnv.Global.NullRef, bottom);
+                        block.Add
+                            (new MiscInstruction(-1, MiscOp.Ldnull) { BeforeState = beforeState, AfterState = state1 });
+                    }
+                    else
+                        throw new InvalidOperationException("invalid test for true/false");
+                    var state2 = state1.PopPushType(2, rootEnv.Global.Int32Ref, bottom);
+                    block.Add
+                        (new CompareInstruction(-1, CompareOp.Ceq, false)
+                             { BeforeState = state1, AfterState = state2, Type = Type });
+                    state2.PropogateBackwards(afterState, dummy);
+                    state1.PropogateBackwards(state2, dummy);
+                    beforeState.PropogateBackwards(state1, dummy);
+                    return state2;
+                }
+            case TestOp.Equal:
+                {
+                    var state1 = beforeState.PopPushType(2, rootEnv.Global.Int32Ref, bottom);
+                    block.Add
+                        (new CompareInstruction(-1, CompareOp.Ceq, false)
+                             { BeforeState = beforeState, AfterState = state1, Type = Type });
+                    state1.PropogateBackwards(afterState, dummy);
+                    beforeState.PropogateBackwards(state1, dummy);
+                    return state1;
+                }
+            case TestOp.NotEqual:
+                {
+                    var state1 = beforeState.PopPushType(2, rootEnv.Global.Int32Ref, bottom);
+                    block.Add
+                        (new CompareInstruction(-1, CompareOp.Ceq, false)
+                             { BeforeState = beforeState, AfterState = state1, Type = Type });
+                    var state2 = state1.PopPushType(1, rootEnv.Global.Int32Ref, bottom);
+                    block.Add(new LdInt32Instruction(-1, 0) { BeforeState = state1, AfterState = state2 });
+                    var state3 = state2.PopPushType(1, rootEnv.Global.Int32Ref, bottom);
+                    block.Add
+                        (new CompareInstruction(-1, CompareOp.Ceq, false)
+                             { BeforeState = state2, AfterState = state3, Type = rootEnv.Global.Int32Ref });
+                    state3.PropogateBackwards(afterState, dummy);
+                    state2.PropogateBackwards(state3, dummy);
+                    state1.PropogateBackwards(state2, dummy);
+                    beforeState.PropogateBackwards(state1, dummy);
+                    return state3;
+                }
+            case TestOp.LessThanOrEqual:
+                {
+                    var state1 = beforeState.PopPushType(2, rootEnv.Global.Int32Ref, bottom);
+                    block.Add
+                        (new CompareInstruction(-1, CompareOp.Cgt, IsUnsigned)
+                             { BeforeState = beforeState, AfterState = state1, Type = Type });
+                    var state2 = state1.PopPushType(1, rootEnv.Global.Int32Ref, bottom);
+                    block.Add(new LdInt32Instruction(-1, 0) { BeforeState = state1, AfterState = state2 });
+                    var state3 = state2.PopPushType(1, rootEnv.Global.Int32Ref, bottom);
+                    block.Add
+                        (new CompareInstruction(-1, CompareOp.Ceq, false)
+                             { BeforeState = state2, AfterState = state3, Type = rootEnv.Global.Int32Ref });
+                    state3.PropogateBackwards(afterState, dummy);
+                    state2.PropogateBackwards(state3, dummy);
+                    state1.PropogateBackwards(state2, dummy);
+                    beforeState.PropogateBackwards(state1, dummy);
+                    return state2;
+                }
+            case TestOp.LessThan:
+                {
+                    var state1 = beforeState.PopPushType(2, rootEnv.Global.Int32Ref, bottom);
+                    block.Add
+                        (new CompareInstruction(-1, CompareOp.Clt, IsUnsigned)
+                             { BeforeState = beforeState, AfterState = state1, Type = Type });
+                    state1.PropogateBackwards(afterState, dummy);
+                    beforeState.PropogateBackwards(state1, dummy);
+                    return state1;
+                }
+            case TestOp.GreaterThanOrEqual:
+
+                {
+                    var state1 = beforeState.PopPushType(2, rootEnv.Global.Int32Ref, bottom);
+                    block.Add
+                        (new CompareInstruction(-1, CompareOp.Cgt, IsUnsigned)
+                             { BeforeState = beforeState, AfterState = state1, Type = Type });
+                    state1.PropogateBackwards(afterState, dummy);
+                    beforeState.PropogateBackwards(state1, dummy);
+                    return state1;
+                }
+                {
+                    var state1 = beforeState.PopPushType(2, rootEnv.Global.Int32Ref, bottom);
+                    block.Add
+                        (new CompareInstruction(-1, CompareOp.Clt, IsUnsigned)
+                             { BeforeState = beforeState, AfterState = state1, Type = Type });
+                    var state2 = state1.PopPushType(1, rootEnv.Global.Int32Ref, bottom);
+                    block.Add(new LdInt32Instruction(-1, 0) { BeforeState = state1, AfterState = state2 });
+                    var state3 = state2.PopPushType(1, rootEnv.Global.Int32Ref, bottom);
+                    block.Add
+                        (new CompareInstruction(-1, CompareOp.Ceq, false)
+                             { BeforeState = state2, AfterState = state3, Type = rootEnv.Global.Int32Ref });
+                    state3.PropogateBackwards(afterState, dummy);
+                    state2.PropogateBackwards(state3, dummy);
+                    state1.PropogateBackwards(state2, dummy);
+                    beforeState.PropogateBackwards(state1, dummy);
+                    return state2;
+                }
+            case TestOp.GreaterThan:
+                {
+                    var state1 = beforeState.PopPushType(2, rootEnv.Global.Int32Ref, bottom);
+                    block.Add
+                        (new CompareInstruction(-1, CompareOp.Cgt, IsUnsigned)
+                             { BeforeState = beforeState, AfterState = state1, Type = Type });
+                    state1.PropogateBackwards(afterState, dummy);
+                    beforeState.PropogateBackwards(state1, dummy);
+                    return state1;
+                }
+            default:
+                throw new ArgumentOutOfRangeException();
+            }
+        }
+
+
+
+    // ----------------------------------------------------------------------
+    // CallStatement
+    // ----------------------------------------------------------------------
+
+    public class CallStatement : Statement
+    {
+        public readonly bool IsVirtual;
+        [NotNull]
+        public readonly MethodRef Method;
+        [NotNull]
+        public readonly IImSeq<Expression> Arguments; // includes target object if instance method
+
+        public CallStatement(bool isVirtual, MethodRef method, IImSeq<Expression> arguments)
+        {
+            IsVirtual = isVirtual;
+            Method = method;
+            Arguments = arguments ?? Constants.EmptyExpressions;
+        }
+
+        public override StatementFlavor Flavor { get { return StatementFlavor.Call; } }
+
+        public override bool NeverReturns { get { return false; } }
+
+        protected override void AccumUsage(CompilationEnvironment compEnv)
+        {
+            if (!Method.IsVirtualOrAbstractOrInterface(compEnv))
+            {
+                compEnv.SubstituteType(Method.DefiningType).AccumUsage(usage, true);
+                usage.SeenMethod(compEnv.SubstituteMember(Method), true);
+            }
+            // else: calls to virtual methods don't need to lookup their types or method definitions
+            foreach (var e in Arguments)
+                e.AccumUsage(compEnv, true, usage, false);
+        }
+
+        public override int GetHashCode()
+        {
+            var res = IsVirtual ? 0xd28e49bcu : 0x4bfb9790u;
+            res ^= (uint)Method.GetHashCode();
+            foreach (var e in Arguments)
+                res = Constants.Rot3(res) ^ (uint)e.GetHashCode();
+            return (int)res;
+        }
+
+        protected override bool EqualBody(Statement other)
+        {
+            var call = (CallStatement)other;
+            if (IsVirtual != call.IsVirtual || !Method.Equals(call.Method) || Arguments.Count != call.Arguments.Count)
+                return false;
+            for (var i = 0; i < Arguments.Count; i++)
+            {
+                if (!Arguments[i].Equals(call.Arguments[i]))
+                    return false;
+            }
+            return true;
+        }
+
+        public override void Append(CSTWriter w)
+        {
+            Method.Append(w);
+            w.Append('(');
+            if (IsVirtual)
+                w.Append("virtual");
+            for (var i = 0; i < Arguments.Count; i++)
+            {
+                if (IsVirtual || i > 0)
+                    w.Append(',');
+                Arguments[i].Append(w, 0);
+            }
+            w.Append(");");
+        }
+    }
+
+
+
+    // ----------------------------------------------------------------------
+    // CallInlinedPseudoExpression
+    // ----------------------------------------------------------------------
+
+    // Represents application of inlined method to arguments.
+    public class CallInlinedPseudoExpression : Expression
+    {
+        // Compilation environment for inlined method, which includes type bindings from surrounding method
+        [NotNull]
+        public readonly CompilationEnvironment CompEnv;
+        [NotNull]
+        public readonly MachineState InitialState;
+        // All types in body have been substituted w.r.t. above compilation environment
+        [NotNull]
+        public readonly Statements Body;
+        [NotNull]
+        public readonly IImSeq<Expression> Arguments;
+
+        public CallInlinedPseudoExpression(CompilationEnvironment compEnv, MachineState initialState, Statements body, IImSeq<Expression> arguments)
+        {
+            CompEnv = compEnv;
+            InitialState = initialState;
+            Body = body;
+            Arguments = arguments;
+        }
+
+        public override ExpressionFlavor Flavor { get { return ExpressionFlavor.CallInlinedPseudo; } }
+
+        public override bool IsValue(CompilationEnvironment compEnv) { return false; }
+
+        public override bool IsCheap { get { return false; } }
+
+        public override TypeRef Type(CompilationEnvironment compEnv)
+        {
+            return CompEnv.SubstituteType(CompEnv.Member.Result);
+        }
+
+        public override void AccumUsage(CompilationEnvironment compEnv, bool isAlwaysUsed, Usage usage, bool inReadWrite)
+        {
+            foreach (var e in Arguments)
+                e.AccumUsage(compEnv, isAlwaysUsed, usage, false);
+            // Switch to nested context
+            usage.Merge(Body.Usage(CompEnv), isAlwaysUsed);
+        }
+
+        public override Expression Simplify(SimplifierContext ctxt)
+        {
+            var simpArguments = Arguments.Select(e => e.Simplify(ctxt)).ToSeq();
+            // Switch to nested context
+            var subCtxt = ctxt.InInlined(CompEnv);
+            var simpBody = Body.Simplify(subCtxt);
+            return new CallInlinedPseudoExpression(CompEnv, InitialState, simpBody, simpArguments);
+        }
+
+        public override void Append(CSTWriter w, int prec)
+        {
+            CompEnv.Exit.Append(w);
+            w.Append("(inlined");
+            foreach (var e in Arguments)
+            {
+                w.Append(',');
+                e.Append(w, 0);
+            }
+            w.Append(')');
+        }
+
+        protected override bool EqualBody(Expression other)
+        {
+            var cie = (CallInlinedPseudoExpression)other;
+            if (!Body.Equals(cie.Body) || Arguments.Count != cie.Arguments.Count)
+                return false;
+            for (var i = 0; i < Arguments.Count; i++)
+            {
+                if (!Arguments[i].Equals(cie.Arguments[i]))
+                    return false;
+            }
+            return true;
+        }
+
+        public override int GetHashCode()
+        {
+            var res = 0x81e67400u;
+            res ^= (uint)Body.GetHashCode();
+            foreach (var e in Arguments)
+            {
+                res = Constants.Rot3(res);
+                res ^= (uint)e.GetHashCode();
+            }
+            return (int)res;
+        }
+    }
+
+        private Expression ZeroForType(TypeRef type)
+        {
+            var s = type.Style(compEnv);
+            
+            if (s is ManagedPointerTypeStyle || s is CodePointerTypeStyle)
+                return new Int32ConstantExpression(0);
+
+            var ns = s as NumberTypeStyle;
+            if (ns != null)
+            {
+                switch (ns.Flavor)
+                {
+                    case NumberFlavor.Int8:
+                    case NumberFlavor.Int16:
+                    case NumberFlavor.Int32:
+                    case NumberFlavor.UInt8:
+                    case NumberFlavor.UInt16:
+                    case NumberFlavor.UInt32:
+                    case NumberFlavor.Boolean:
+                    case NumberFlavor.Char:
+                        return new Int32ConstantExpression(0);
+                    case NumberFlavor.Int64:
+                    case NumberFlavor.UInt64:
+                        return new Int64ConstantExpression(0);
+                    case NumberFlavor.Single:
+                        return new SingleConstantExpression(0);
+                    case NumberFlavor.Double:
+                        return new DoubleConstantExpression(0);
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
+            }
+
+            if (s is EnumTypeStyle)
+                return ZeroForType(((EnumTypeStyle)s).Implementation);
+
+            if (s is ReferenceTypeStyle)
+                return new NullConstantExpression();
+
+            throw new InvalidOperationException("no zero for type");
+        }
+
+
+                    else if (i.Flavor == InstructionFlavor.Conv)
+                    {
+                        var convi = (ConvInstruction)i;
+                        if (convi.TargetNumberFlavor == NumberFlavor.UIntNative)
+                        {
+                            // conv.u => conv.u4
+                            lookahead[0] = new ConvInstruction(convi.Offset, NumberFlavor.UInt32, convi.WithOverflow, convi.IsSourceUnsigned) { SourceType = convi.SourceType, BeforeState = convi.BeforeState, AfterState = convi.AfterState };
+                            Trace(1, convi);
+                            rewritten = true;
+                        }
+                        else if (convi.TargetNumberFlavor == NumberFlavor.IntNative)
+                        {
+                            // conv.i => conv.i4
+                            lookahead[0] = new ConvInstruction
+                                (convi.Offset, NumberFlavor.Int32, convi.WithOverflow, convi.IsSourceUnsigned) { SourceType = convi.SourceType, BeforeState = convi.BeforeState, AfterState = convi.AfterState };
+                            Trace(1, convi);
+                            rewritten = true;
+                        }
+                    }
+
+
+
+            // ----------------------------------------
+            // Load the alternate assemblies mentioned by the resolution rules, and prepare the rules
+            // ----------------------------------------
+            var resolutionCanonicalFileNameToInfo = new Map<string, DllInfo>();
+            var resolutionStrongNameToInfo = new Map<AssemblyName, DllInfo>();
+            foreach (var r in resolutionRules)
+            {
+                var info = default(DllInfo);
+                if (string.IsNullOrEmpty(r.FileName))
+                {
+                    // A null assembly names signals that this assembly matching this pattern are to be ignored
+                    info = new DllInfo(null, null, null, null, null, null);
+                }
+                else
+                {
+                    var canonicalFileName = Path.GetFullPath(r.FileName);
+                    if (!resolutionCanonicalFileNameToInfo.TryGetValue(canonicalFileName, out info))
+                    {
+                        info = Pass1(r.FileName, canonicalFileName);
+                        var existingInfo = default(DllInfo);
+                        if (resolutionStrongNameToInfo.TryGetValue(info.AssemblyName, out existingInfo))
+                        {
+                            // already loaded this assembly from different file
+                            log
+                                (new DuplicateAssemblyStrongNameMessage
+                                     (canonicalFileName, info.AssemblyName, existingInfo.CanonicalFileName));
+                            throw new ExitException();
+                        }
+                        resolutionCanonicalFileNameToInfo.Add(canonicalFileName, info);
+                        resolutionStrongNameToInfo.Add(info.AssemblyName, info);
+                    }
+                    // else: already loaded this file
+                }
+                resolutionRegexs.Add(new Regex(r.Pattern), info);
+            }
+
+            // ----------------------------------------
+            // Pass 1: Load the requested assemblies, and redirect loads
+            // ----------------------------------------
+
+            originalFileNameToStrongName = new Map<string, AssemblyName>();
+
+            var canonicalFileNames = new Set<string>();
+            foreach (var originalFileName in originalFileNames)
+            {
+                var canonicalFileName = Path.GetFullPath(originalFileName);
+                var info = default(DllInfo);
+                if (resolutionCanonicalFileNameToInfo.TryGetValue(canonicalFileName, out info))
+                {
+                    // Already loaded this file via a resolution rule, so use that
+                    var existingInfo = default(DllInfo);
+                    if (strongNameToInfo.TryGetValue(info.AssemblyName, out existingInfo))
+                    {
+                        // Already loaded this assembly from different file
+                        log
+                            (new DuplicateAssemblyStrongNameMessage
+                                 (canonicalFileName, info.AssemblyName, existingInfo.CanonicalFileName));
+                        throw new ExitException();
+                    }
+                    strongNameToInfo.Add(info.AssemblyName, info);
+                    originalFileNameToStrongName.Add(originalFileName, info.AssemblyName);
+                }
+                else
+                {
+                    if (canonicalFileNames.Contains(canonicalFileName))
+                    {
+                        // Already loaded this file directly
+                        log(new DuplicateAssemblyFileNameMessage(originalFileName, canonicalFileName));
+                        throw new ExitException();
+                    }
+                    canonicalFileNames.Add(canonicalFileName);
+                    info = Pass1(originalFileName, canonicalFileName);
+                    var existingInfo = default(DllInfo);
+                    if (strongNameToInfo.TryGetValue(info.AssemblyName, out existingInfo) ||
+                        resolutionStrongNameToInfo.TryGetValue(info.AssemblyName, out existingInfo))
+                    {
+                        // Already loaded this assembly via different file, either via resolution rule or
+                        // via explict load
+                        log
+                            (new DuplicateAssemblyStrongNameMessage
+                                 (canonicalFileName, info.AssemblyName, existingInfo.CanonicalFileName));
+                        throw new ExitException();
+                    }
+                    var dummy = default(bool);
+                    var mappedInfo = MapAssembly(info.AssemblyName, out dummy);
+                    if (mappedInfo != null)
+                    {
+                        if (mappedInfo.AssemblyName == null)
+                            // Don't load assembly
+                            log(new IgnoringAssembly(info.AssemblyName, canonicalFileName));
+                        else if (mappedInfo.AssemblyName.Equals(info.AssemblyName))
+                        {
+                            // Rule didn't change assembly name, so we have two files going to the same assembly
+                            log
+                                (new DuplicateAssemblyStrongNameMessage
+                                     (canonicalFileName, info.AssemblyName, mappedInfo.CanonicalFileName));
+                            throw new ExitException();
+                        }
+                        else
+                        {
+                            // Redirect assembly. Ok if another assembly has already have been redirected to the same target.
+                            log
+                                (new RedirectingAssembly
+                                     (info.AssemblyName,
+                                      canonicalFileName,
+                                      mappedInfo.AssemblyName,
+                                      mappedInfo.CanonicalFileName));
+                            if (!strongNameToInfo.ContainsKey(mappedInfo.AssemblyName))
+                                strongNameToInfo.Add(mappedInfo.AssemblyName, mappedInfo);
+                            originalFileNameToStrongName.Add(originalFileName, mappedInfo.AssemblyName);
+                        }
+                    }
+                    else
+                    {
+                        // No rule fired
+                        strongNameToInfo.Add(info.AssemblyName, info);
+                        originalFileNameToStrongName.Add(originalFileName, info.AssemblyName);
+                    }
+                }
+            }
+
+
+    public class AutomaticSpecialAssemblyMessage : Message
+    {
+        public readonly string SpecialName;
+        public readonly AssemblyName AssemblyName;
+        public readonly IImSeq<string> AugmentedFileNames;
+
+        public AutomaticSpecialAssemblyMessage(string specialName, AssemblyName assemblyName, IImSeq<string> augmentedFileNames)
+            : base(null, Severity.Info, 1020)
+        {
+            SpecialName = specialName;
+            AssemblyName = assemblyName;
+            AugmentedFileNames = augmentedFileNames;
+        }
+
+        public override void AppendMessage(StringBuilder sb)
+        {
+            base.AppendMessage(sb);
+            sb.Append("The special '");
+            sb.Append(SpecialName);
+            sb.Append("' assembly is being automatically included from assembly '");
+            sb.Append(AssemblyName);
+            sb.Append("' by combining the files: ");
+            var first = true;
+            foreach (var fn in AugmentedFileNames)
+            {
+                if (first)
+                    first = false;
+                else
+                    sb.Append(", ");
+                sb.Append("'");
+                sb.Append(fn);
+                sb.Append("'");
+            }
+        }
+}
+
+
+           if (matching == null)
+           {
+               matching = augmentations.FindSpecialAssembly(specialName);
+               var dllInfos = augmentations.AugmentedAssembly(matching);
+               log
+                   (new AutomaticSpecialAssemblyMessage
+                        (specialName, matching, dllInfos.Select(i => i.CanonicalFileName).ToSeq()));
+               compilations.Add(matching, new AssemblyInfo(matching, true, dllInfos));
+           }
+           else
+
+
+        public AssemblyName FindSpecialAssembly(string specialName)
+        {
+            var matching = default(AssemblyName);
+            foreach (var kv in augmentations)
+            {
+                if (kv.Key.Name.Contains(specialName))
+                {
+                    if (matching == null)
+                        matching = kv.Key;
+                    else
+                    {
+                        log(new DuplicateSpecialAssemblyMessage(specialName, matching, kv.Key));
+                        throw new ExitException();
+                    }
+                }
+            }
+            if (matching == null)
+            {
+                log(new MissingSpecialAssemblyMessage(specialName));
+                throw new ExitException();
+            }
+            return matching;
+        }
+
+
+
+
+    // An environment which explicitly does not allow for any free type parameters. Used by internal primitives.
+    public class GroundEnv
+    {
+        [NotNull]
+        public readonly Global Global;
+        [NotNull]
+        public readonly IImSeq<SkolemDef> TypeBoundSkolemDefs;
+        [NotNull]
+        public readonly IImSeq<SkolemDef> MethodBoundSkolemDefs;
+
+        public GroundEnv(Global global, IImSeq<SkolemDef> typeBoundSkolemDefs, IImSeq<SkolemDef> methodBoundSkolemDefs)
+        {
+            Global = global;
+            TypeBoundSkolemDefs = typeBoundSkolemDefs ?? Constants.EmptySkolemDefs;
+            MethodBoundSkolemDefs = methodBoundSkolemDefs ?? Constants.EmptySkolemDefs;
+        }
+
+        public void ResolveSkolem(ParameterFlavor flavor, int index, out AssemblyDef assemblyDef, out TypeDef typeDef)
+        {
+            var def = default(SkolemDef);
+            switch (flavor)
+            {
+                case ParameterFlavor.Type:
+                    if (index >= TypeBoundSkolemDefs.Count)
+                        throw new InvalidOperationException("invalid skolemized type-bound type parameter");
+                    def = TypeBoundSkolemDefs[index];
+                    break;
+                case ParameterFlavor.Method:
+                    if (index >= MethodBoundSkolemDefs.Count)
+                        throw new InvalidOperationException("invalid skolemized method-bound type parameter");
+                    def = MethodBoundSkolemDefs[index];
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+            assemblyDef = def.Assembly;
+            typeDef = def.Parameter;
+        }
+    }
+
+
+
+        public void Check()
+        {
+            var nAssemblies = 0;
+            var nTypes = 0;
+            var nMembers = 0;
+
+            // Phase 1: Check names are resolvable, fixup some value-vs-ref type issues deferred by the loader,
+            //          and construct the 'uses' graph
+            foreach (var assemblyDef in Global.Assemblies)
+            {
+                nAssemblies++;
+                foreach (var typeDef in assemblyDef.Types)
+                {
+                    nTypes++;
+                    typeDef.AccumUsedTypeDefs(this, Log, assemblyDef);
+                    foreach (var memberDef in typeDef.Members)
+                    {
+                        nMembers++;
+                        memberDef.AccumUsedTypeAndMemberDefs(this, Log, assemblyDef, typeDef);
+                    }
+                }
+            }
+
+            if (tracer != null)
+            {
+                tracer.AppendLine
+                    (String.Format("Loaded: {0} assemblies, {1} types, {2} members", nAssemblies, nTypes, nMembers));
+            }
+
+            // Phase 2: Construct 'used-by' graph
+            foreach (var assemblyDef in Global.Assemblies)
+            {
+                foreach (var typeDef in assemblyDef.Types)
+                {
+                    if (typeDef.Invalid == null)
+                    {
+                        typeDef.Transpose(Global, assemblyDef);
+                        foreach (var memberDef in typeDef.Members)
+                        {
+                            if (memberDef.Invalid == null)
+                                memberDef.Transpose(Global, assemblyDef, typeDef);
+                        }
+                    }
+                }
+            }
+
+            // Phase 3: Construct topological sort of types and members (later only depends on earlier unless in a scc)
+            var visitedTypeDefs = new Set<QualifiedTypeName>();
+            var sortedTypeDefs = new Seq<QualifiedTypeName>();
+            var visitedMemberDefs = new Set<QualifiedMemberName>();
+            var sortedMemberDefs = new Seq<QualifiedMemberName>();
+            foreach (var assemblyDef in Global.Assemblies)
+            {
+                foreach (var typeDef in assemblyDef.Types)
+                {
+                    if (typeDef.Invalid == null)
+                    {
+                        typeDef.TopologicalAllDeps(Global, assemblyDef, visitedTypeDefs, sortedTypeDefs);
+                        foreach (var memberDef in typeDef.Members)
+                        {
+                            if (memberDef.Invalid == null)
+                                memberDef.TopologicalAllDeps
+                                    (Global, assemblyDef, typeDef, visitedMemberDefs, sortedMemberDefs);
+                        }
+                    }
+                }
+            }
+
+            // Phase 4: Construct strongly connected components of types and members
+            visitedTypeDefs = new Set<QualifiedTypeName>();
+            var typeScc = new Seq<QualifiedTypeName>();
+            var typeSccs = new Seq<Seq<QualifiedTypeName>>();
+            for (var i = sortedTypeDefs.Count - 1; i >= 0; i--)
+            {
+                var r = sortedTypeDefs[i];
+                var assemblyDef = default(AssemblyDef);
+                var typeDef = default(TypeDef);
+                if (r.PrimTryResolve(Global, out assemblyDef, out typeDef))
+                {
+                    typeDef.UsedByTypesClosure(Global, assemblyDef, visitedTypeDefs, typeScc);
+                    if (typeScc.Count > 0)
+                    {
+                        typeSccs.Add(typeScc);
+                        typeScc = new Seq<QualifiedTypeName>();
+                    }
+                }
+            }
+
+            visitedMemberDefs = new Set<QualifiedMemberName>();
+            var memberScc = new Seq<QualifiedMemberName>();
+            var memberSccs = new Seq<Seq<QualifiedMemberName>>();
+            for (var i = sortedMemberDefs.Count - 1; i >= 0; i--)
+            {
+                var r = sortedMemberDefs[i];
+                var assemblyDef = default(AssemblyDef);
+                var typeDef = default(TypeDef);
+                var memberDef = default(MemberDef);
+                if (r.PrimTryResolve(Global, out assemblyDef, out typeDef, out memberDef))
+                {
+                    memberDef.UsedByMembersClosure(Global, assemblyDef, typeDef, visitedMemberDefs, memberScc);
+                    if (memberScc.Count > 0)
+                    {
+                        memberSccs.Add(memberScc);
+                        memberScc = new Seq<QualifiedMemberName>();
+                    }
+                }
+            }
+
+            // Phase 5: Propogate primitive failures now, since saves a lot of work in what follows
+            PropogateInvalidity(typeSccs, memberSccs);
+
+            nAssemblies = 0;
+            nTypes = 0;
+            nMembers = 0;
+
+            // Phase 6: Check validity of types and members, fill-in the slot implementations for types, and
+            //          construct the slot-to-implementations graph.
+            var rootEnv = Global.Environment();
+            foreach (var assemblyDef in Global.Assemblies)
+            {
+                nAssemblies++;
+                var assmEnv = rootEnv.AddAssembly(assemblyDef);
+                foreach (var typeDef in assemblyDef.Types)
+                {
+                    var typeEnv = assmEnv.AddType(typeDef).AddSelfTypeBoundArguments();
+                    if (typeDef.Invalid == null)
+                    {
+                        nTypes++;
+                        typeDef.CheckValid(this, typeEnv);
+                    }
+                    if (typeDef.Invalid == null)
+                    {
+                        foreach (var memberDef in typeDef.Members)
+                        {
+                            var memEnv = typeEnv.AddMember(memberDef);
+                            if (memberDef.Invalid == null)
+                            {
+                                nMembers++;
+                                memberDef.CheckValid(this, memEnv);
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (tracer != null)
+            {
+                tracer.AppendLine
+                    (String.Format
+                         ("After first failure propogation: {0} assemblies, {1} types, {2} members",
+                          nAssemblies,
+                          nTypes,
+                          nMembers));
+            }
+
+
+            // Phase 7: Propogate any new failures discovered by above
+            PropogateInvalidity(typeSccs, memberSccs);
+
+            nAssemblies = 0;
+            nTypes = 0;
+            nMembers = 0;
+
+            // Phase 8: Discover roots and fixup entry points (even if they are invalid)
+            var rootMethods = new Seq<QualifiedMemberName>();
+            var rootTypes = new Seq<QualifiedTypeName>();
+            foreach (var assemblyDef in Global.Assemblies)
+            {
+                nAssemblies++;
+                var entryPoint = default(MethodRef);
+                foreach (var typeDef in assemblyDef.Types)
+                {
+                    if (typeDef.Invalid == null)
+                        nTypes++;
+                    if (TypeAlwaysUsed(assemblyDef, typeDef))
+                    {
+                        rootTypes.Add(typeDef.QualifiedTypeName(Global, assemblyDef));
+                        typeDef.PropogateUsed(this, assemblyDef);
+                    }
+                    foreach (var memberDef in typeDef.Members)
+                    {
+                        if (memberDef.Invalid == null)
+                            nMembers++;
+                        var methodDef = memberDef as MethodDef;
+                        if (methodDef != null)
+                        {
+                            if (IsAlternateEntryPoint(assemblyDef, typeDef, methodDef))
+                            {
+                                var methodRef = methodDef.PrimMethodReference
+                                    (Global, assemblyDef, typeDef, null, null);
+                                if (entryPoint != null)
+                                {
+                                    Log(new DuplicateEntryPointMessage(entryPoint, methodRef));
+                                    throw new ExitException();
+                                }
+                                entryPoint = methodRef;
+                            }
+                            else if (MethodAlwaysUsed(assemblyDef, typeDef, methodDef))
+                            {
+                                rootMethods.Add(methodDef.QualifiedMemberName(Global, assemblyDef, typeDef));
+                                methodDef.PropogateUsed(this, assemblyDef, typeDef);
+                            }
+                        }
+                    }
+                }
+                if (entryPoint == null)
+                    entryPoint = assemblyDef.EntryPoint;
+                else
+                    assemblyDef.EntryPoint = entryPoint;
+
+                if (entryPoint != null)
+                {
+                    // Entry points are implicity used
+                    var entryAssemblyDef = default(AssemblyDef);
+                    var entryTypeDef = default(TypeDef);
+                    var entryMemberDef = default(MemberDef);
+                    if (entryPoint.PrimTryResolve(Global, out entryAssemblyDef, out entryTypeDef, out entryMemberDef))
+                    {
+                        rootMethods.Add(entryMemberDef.QualifiedMemberName(Global, entryAssemblyDef, entryTypeDef));
+                        entryMemberDef.PropogateUsed(this, entryAssemblyDef, entryTypeDef);
+                    }
+                }
+            }
+
+            if (tracer != null)
+            {
+                tracer.AppendLine
+                    (String.Format
+                         ("After second failure propogation: {0} assemblies, {1} types, {2} members",
+                          nAssemblies,
+                          nTypes,
+                          nMembers));
+            }
+
+            // Phase 9: Propogate usedness from virtual/interface slots to their overrides/implementing methods,
+            //          and failure in the opposite direction. Also complete the mustHaveADefinitionCache w.r.t.
+            //          implementations.
+            var progress = default(bool);
+            do
+            {
+                progress = false;
+                foreach (var assemblyDef in Global.Assemblies)
+                {
+                    foreach (var typeDef in assemblyDef.Types)
+                    {
+                        foreach (var methodDef in
+                            typeDef.Members.OfType<MethodDef>().Where(d => d.IsUsed && d.Implementors != null))
+                        {
+                            var slot = methodDef.QualifiedMemberName(Global, assemblyDef, typeDef);
+                            var mustHave = mustHaveADefinitionCache.Contains(slot);
+                            foreach (var impl in methodDef.Implementors)
+                            {
+                                if (mustHave)
+                                    mustHaveADefinitionCache.Add(impl);
+                                var implAssemblyDef = default(AssemblyDef);
+                                var implTypeDef = default(TypeDef);
+                                var implMemberDef = default(MemberDef);
+                                if (impl.PrimTryResolve(Global, out implAssemblyDef, out implTypeDef, out implMemberDef))
+                                {
+                                    if (implTypeDef.IsUsed)
+                                    {
+                                        if (!implMemberDef.IsUsed && implMemberDef.Invalid == null)
+                                        {
+                                            progress = true;
+                                            implMemberDef.PropogateUsed(this, assemblyDef, typeDef);
+                                        }
+                                        if (implMemberDef.Invalid != null && methodDef.Invalid == null)
+                                        {
+                                            methodDef.Invalid = new CST.InvalidInfo
+                                                (MessageContextBuilders.Member(Global, implAssemblyDef, implTypeDef, implMemberDef), implMemberDef.Invalid);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            while (progress);
+
+            // Phase 10: Propogate any new failures discovered by above
+            PropogateInvalidity(typeSccs, memberSccs);
+
+            // Phase 11: Check roots are valid
+            foreach (var typeName in rootTypes)
+            {
+                var assemblyDef = default(AssemblyDef);
+                var typeDef = default(TypeDef);
+                if (typeName.PrimTryResolve(Global, out assemblyDef, out typeDef))
+                {
+                    if (typeDef.Invalid != null)
+                    {
+                        Log
+                            (new UnimplementableUsedTypeMessage
+                                 (MessageContextBuilders.Type(Global, assemblyDef, typeDef), typeDef.Invalid));
+                        throw new ExitException();
+                    }
+                }
+            }
+            foreach (var methodName in rootMethods)
+            {
+                var assemblyDef = default(AssemblyDef);
+                var typeDef = default(TypeDef);
+                var memberDef = default(MemberDef);
+                if (methodName.PrimTryResolve(Global, out assemblyDef, out typeDef, out memberDef))
+                {
+                    if (memberDef.Invalid != null)
+                    {
+                        Log
+                            (new UnimplementableRootMethodMessage
+                                 (MessageContextBuilders.Member(Global, assemblyDef, typeDef, memberDef),
+                                  memberDef.Invalid));
+                        throw new ExitException();
+                    }
+                }
+            }
+
+            nAssemblies = 0;
+            nTypes = 0;
+            nMembers = 0;
+
+
+            // Phase 12: Construct topological sort of type's according to their .cctor 'used' graph
+            visitedTypeDefs = new Set<QualifiedTypeName>();
+            foreach (var assemblyDef in Global.Assemblies)
+            {
+                nAssemblies++;
+                foreach (var typeDef in assemblyDef.Types)
+                {
+                    if (typeDef.IsUsed && typeDef.Invalid == null)
+                    {
+                        nTypes++;
+                        typeDef.TopologicalTypeInit(Global, assemblyDef, visitedTypeDefs, typeInitializationOrder);
+                        foreach (var memberDef in typeDef.Members)
+                        {
+                            if (memberDef.IsUsed && memberDef.Invalid == null)
+                                nMembers++;
+                        }
+                    }
+                }
+            }
+
+            if (tracer != null)
+            {
+                tracer.AppendLine
+                    (String.Format
+                         ("After third failure propogation: {0} assemblies, {1} types, {2} members",
+                          nAssemblies,
+                          nTypes,
+                          nMembers));
+            }
+        }
+
+
+
+
+
+
+        public void Add(Instruction item)
+        {
+            body.Add(item);
+            if (Count > 0)
+                initialState = null;
+        }
+
+        public void AddClone(Instruction item, ref int nextInstructionId)
+        {
+            body.Add(item.Clone(ref nextInstructionId));
+            if (Count > 0)
+                initialState = null;
+        }
+
+        public void Add(InstructionBlock block)
+        {
+            foreach (var i in block)
+                body.Add(i);
+            if (Count > 0)
+                initialState = null;
+        }
+
+        public void AddClone(InstructionBlock block, ref int nextInstructionId)
+        {
+            foreach (var i in block)
+                body.Add(i.Clone(ref nextInstructionId));
+            if (Count > 0)
+                initialState = null;
+        }
+
+        public void Add(IImSeq<Instruction> instructions)
+        {
+            foreach (var instruction in instructions)
+                body.Add(instruction);
+            if (Count > 0)
+                initialState = null;
+        }
+
+        public void Add(params Instruction[] instructions)
+        {
+            foreach (var instruction in instructions)
+                body.Add(instruction);
+            if (Count > 0)
+                initialState = null;
+        }
+
+
+
+        public bool IsReadOnly
+        {
+            get { return Body.IsReadOnly; }
+        }
+
+        public Instruction this[int index]
+        {
+            get
+            {
+                return Body[index];
+            }
+            set
+            {
+                throw new InvalidOperationException("only add is supported");
+            }
+        }
+
+        public void Clear()
+        {
+            throw new InvalidOperationException("only add is supported");
+        }
+
+        public bool Remove(Instruction item)
+        {
+            throw new InvalidOperationException("only add is supported");
+        }
+
+        public void Insert(int index, Instruction item)
+        {
+            throw new InvalidOperationException("only add is supported");
+        }
+
+        public void RemoveAt(int index)
+        {
+            throw new InvalidOperationException("only add is supported");
+        }
+
+        public int Count
+        {
+            get { return body.Count; }
+        }
+
+        public bool Contains(Instruction item)
+        {
+            return body.Contains(item);
+        }
+
+        public void CopyTo(Instruction[] array, int arrayIndex)
+        {
+            body.CopyTo(array, arrayIndex);
+        }
+
+        public int IndexOf(Instruction item)
+        {
+            return body.IndexOf(item);
+        }
+
+        public IEnumerator<Instruction> GetEnumerator()
+        {
+            return body.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return body.GetEnumerator();
+        }
+
+
+
+
+
+    public class TypeConstructorMemberEnvironment<T> : TypeConstructorEnvironment where T : MemberDef
+    {
+        // Member we're in.
+        // If member is a polymorphic method, the method type parameters are not yet bound.
+        [NotNull]
+        public readonly T Member;
+
+        public TypeConstructorMemberEnvironment(Global global, IImSeq<SkolemDef> skolemDefs, AssemblyDef assembly, TypeDef type, T member)
+            : base(global, skolemDefs, assembly, type)
+        {
+            Member = member;
+        }
+
+        public new MemberEnvironment<T> AddTypeBoundArguments(IImSeq<TypeRef> typeBoundArguments)
+        {
+            return new MemberEnvironment<T>(Global, SkolemDefs, Assembly, Type, typeBoundArguments, Member);
+        }
+
+        public new MemberEnvironment<T> AddSelfTypeBoundArguments()
+        {
+            if (Type.Arity > 0)
+            {
+                var typeBoundArguments =
+                    Type.Parameters.Select((t, i) => (TypeRef)new SkolemTypeRef(SkolemDefs.Count + i)).ToSeq();
+                var typeBoundSkolemDefs = Type.Parameters.Select(p => new SkolemDef(Assembly, Type, p.PrimSubstitute(typeBoundArguments, null)));
+                return new MemberEnvironment<T>(Global, SkolemDefs.Concat(typeBoundSkolemDefs).ToSeq(), Assembly, Type, typeBoundArguments, Member);
+            }
+            else
+                return new MemberEnvironment<T>(Global, null, Assembly, Type, null, Member);
+        }
+
+        public TypeConstructorEnvironment ForgetMember()
+        {
+            return new TypeConstructorEnvironment(Global, SkolemDefs, Assembly, Type);
+        }
+
+        public new MemberRef Exit { get { return Member.PrimReference(Global, Assembly, Type, Constants.EmptyTypeRefs); } }
+
+        public TypeConstructorMemberEnvironment<MethodDef> ForMethod
+        {
+            get { return (TypeConstructorMemberEnvironment<MethodDef>)(object)this; }
+        }
+
+        public TypeConstructorMemberEnvironment<FieldDef> ForField
+        {
+            get { return (TypeConstructorMemberEnvironment<FieldDef>)(object)this; }
+        }
+
+        public TypeConstructorMemberEnvironment<EventDef> ForEvent
+        {
+            get { return (TypeConstructorMemberEnvironment<EventDef>)(object)this; }
+        }
+
+        public TypeConstructorMemberEnvironment<PropertyDef> ForProperty
+        {
+            get { return (TypeConstructorMemberEnvironment<PropertyDef>)(object)this; }
+        }
+
+        public override void Append(CSTWriter w)
+        {
+            base.Append(w);
+            w.Append("::");
+            Member.Signature.Append(w, null);
+        }
+    }
+
+
+
+        public new TypeConstructorMemberEnvironment<T> ForgetTypeBoundArguments()
+        {
+            return new TypeConstructorMemberEnvironment<T>(Global, SkolemDefs, Assembly, Type, Member);
+        }
+
+
+
+        public TypeConstructorMemberEnvironment<MemberDef> EnterConstructor(TypeConstructorEnvironment tyconEnv)
+        {
+            var memberDef = tyconEnv.Type.ResolveMember(this);
+            if (memberDef == null)
+                throw new InvalidOperationException("unable to resolve signature");
+            return tyconEnv.AddMember(memberDef);
+        }
+
+
+
+        public new TypeConstructorMemberEnvironment<MethodDef> EnterConstructor(TypeConstructorEnvironment tyconEnv)
+        {
+            var methodDef = tyconEnv.Type.ResolveMember(this);
+            if (methodDef == null)
+                throw new InvalidOperationException("unable to resolve method");
+            return tyconEnv.AddMember(methodDef);
+        }
+
+
+
+        public new TypeConstructorMemberEnvironment<FieldDef> EnterConstructor(TypeConstructorEnvironment tyconEnv)
+        {
+            var fieldDef = tyconEnv.Type.ResolveMember(this);
+            if (fieldDef == null)
+                throw new InvalidOperationException("unable to resolve field");
+            return tyconEnv.AddMember(fieldDef);
+        }
+
+
+        public new TypeConstructorMemberEnvironment<PropertyDef> EnterConstructor(TypeConstructorEnvironment tyconEnv)
+        {
+            var propDef = tyconEnv.Type.ResolveMember(this);
+            if (propDef == null)
+                throw new InvalidOperationException("unable to reslove property");
+
+            return tyconEnv.AddMember(propDef);
+        }
+
+
+        public new TypeConstructorMemberEnvironment<EventDef> EnterConstructor(TypeConstructorEnvironment tyconEnv)
+        {
+            var eventDef = tyconEnv.Type.ResolveMember(this);
+            if (eventDef == null)
+                throw new InvalidOperationException("unable to resolve event");
+            return tyconEnv.AddMember(eventDef);
+        }
+
+        public static MessageContext Member<T>(TypeConstructorMemberEnvironment<T> tyconMemEnv) where T : MemberDef
+        {
+            return Member(null, tyconMemEnv);
+        }
+
+        public static MessageContext Member<T>(MessageContext parent, TypeConstructorMemberEnvironment<T> tyconMemEnv) where T : MemberDef
+        {
+            return new MessageContext
+                (parent, tyconMemEnv.Member.Loc, sb => CSTWriter.WithAppendDebug(sb, tyconMemEnv.Append));
+        }
+
+
+        public TypeConstructorMemberEnvironment<MemberDef> EnterConstructor(RootEnvironment rootEnv)
+        {
+            var tyconEnv = DefiningType.EnterConstructor(rootEnv);
+            var memberDef = tyconEnv.Type.ResolveMember(Signature);
+            if (memberDef == null)
+                throw new InvalidOperationException("unable to resolve signature");
+            return tyconEnv.AddMember(memberDef);
+        }
+
+
+
+        public new TypeConstructorMemberEnvironment<MethodDef> EnterConstructor(RootEnvironment rootEnv)
+        {
+            var tyconEnv = DefiningType.EnterConstructor(rootEnv);
+            var methodDef = tyconEnv.Type.ResolveMember(signature);
+            if (methodDef == null)
+                throw new InvalidOperationException("unable to resolve method");
+            return tyconEnv.AddMember(methodDef);
+        }
+
+
+        public new TypeConstructorMemberEnvironment<FieldDef> EnterConstructor(RootEnvironment rootEnv)
+        {
+            var tyconEnv = DefiningType.EnterConstructor(rootEnv);
+            var fieldDef = tyconEnv.Type.ResolveMember(signature);
+            if (fieldDef == null)
+                throw new InvalidOperationException("unable to resolve field");
+            return tyconEnv.AddMember(fieldDef);
+        }
+
+        public new TypeConstructorMemberEnvironment<PropertyDef> EnterConstructor(RootEnvironment rootEnv)
+        {
+            var tyconEnv = DefiningType.EnterConstructor(rootEnv);
+            var propDef = tyconEnv.Type.ResolveMember(signature);
+            if (propDef == null)
+                throw new InvalidOperationException("unable to reslove property");
+            return tyconEnv.AddMember(propDef);
+        }
+
+        public new TypeConstructorMemberEnvironment<EventDef> EnterConstructor(RootEnvironment rootEnv)
+        {
+            var tyconEnv = DefiningType.EnterConstructor(rootEnv);
+            var eventDef = tyconEnv.Type.ResolveMember(signature);
+            if (eventDef == null)
+                throw new InvalidOperationException("unable to resolve event");
+            return tyconEnv.AddMember(eventDef);
+        }
+
+        public TypeConstructorMemberEnvironment<MemberDef> Enter(RootEnvironment rootEnv)
+        {
+            var assemblyDef = default(AssemblyDef);
+            var typeDef = default(TypeDef);
+            var memberDef = default(MemberDef);
+            if (!PrimTryResolve(rootEnv.Global, out assemblyDef, out typeDef, out memberDef))
+                throw new InvalidOperationException("unable to resolve qualified type name");
+            return rootEnv.AddAssembly(assemblyDef).AddType(typeDef).AddMember(memberDef);
+        }
+

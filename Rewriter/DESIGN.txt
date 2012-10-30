@@ -1,0 +1,1459 @@
+﻿
+                                          ----------------------
+                                          CLR/JavaScript Interop
+                                          ----------------------
+
+// TODO: Enum as string options
+// TODO: Param array using JavaScript arguments convention
+// TODO: Allow throw if import Keyed and has no key
+
+Introduction
+~~~~~~~~~~~~
+
+CLR/JavaScript interop is used in two "modes":
+ - CLR Mode:   Between code running in the CLR (which we'll call "managed CLR code") and native JavaScript (which
+               we'll call "unmanaged JavaScript") running one or more JavaScript engines. There are a number of
+               configurations:
+                - The JavaScript engine is within a browser, and the CLR is hosted by the browser.
+                - The JavaScript engine is hosted within the CLR.
+                - The JavaScript engine and CLR are in separate processes.
+               However the interop details are the same regardless of configuration.
+ - IL2JS Mode: Between CLR code compiled to JavaScript by the IL2JS compiler (which we'll call "managed JavaScript"),
+               and native JavaScript code (which we'll again call "unmanaged JavaScript"). In this case all code runs
+               within the same JavaScript engine.
+
+The interop mechanism allows:
+ - Objects created by unmanaged JavaScript to be accessible to managed CLR and JavaScript code.
+ - Objects created by managed CLR or JavaScript to be accessible to the unmanaged world.
+ - Managed CLR or JavaScript to extend the objects of unmanaged JavaScript with additional fields.
+ - Functions in unmanaged JavaScript to be callable as if they were managed methods.
+ - Managed methods to be callabale from unmanaged JavaScript as if they were globally defined or implemented
+   in a prototype.
+To support this, we will "import" objects when they cross from unmanaged to managed so that they may peacefully
+coexist with other managed objects in the runtime. Dually, we will "export" objects when they go the other
+direction so that unmanaged JavaScript will see them as it expects.
+
+There are four sources of unmanaged objects:
+ - JavaScript proxies for COM-like entities in the host environment, such as XmlHttpRequest. These objects
+   generally do not allow additional field bindings.
+ - JavaScript objects created and manipulated by third-party JavaScript or the host environment itself.
+   The layout of these objects is outside of our control. Fields may be bound within them, but at the risk
+   of field name collision.
+ - JavaScript objects created and manipulated by a combination of mananged and unmanaged code. In this
+   case the developer may choose unmanaged field names to avoid collision with managed field names
+   and the fields used by the managed runtime system.
+ - JavaScript primitive objects, such as numbers, strings and functions. These objects have no fields by
+   default, and generally do not allow any to be added. However they do allow fields to be bound within
+   their constructor function prototypes.
+
+When objects cross the mananged/unmanaged boundary we'd like as many of the following properties to hold as
+feasible:
+
+ - State 1
+     If managed x crosses into unmanaged, clearly the unmanaged fields of x must be preserved.
+     However, when it crosses back the managed fields of x must also be preserved:
+         forall managed and unmanaged field names f . import(export(x)).f === x.f  (in managed)
+         forall unmanaged field names f . export(x).f === x.f     (where lhs is in unmanaged and rhs in managed)
+
+ - State 2
+     An unmanaged object should not have its fields extended or altered by managed code:
+         forall strings s . x[s] === export(import(x))[s]                          (in unmanaged)
+         forall strings s . x[s] === import(export(x))[s]                          (in managed)
+
+ - Reference equality 1
+     Reference equality on managed objects should agree with referece equality on unmanaged objects:
+         forall managed objects x, y : x === y ==> export(x) === export(y)
+         forall unmanaged objects x, y : x === y ==> import(x) === import(y)
+
+ - Reference equality 2
+     Reference equality should be preserved over the boundary:
+         forall managed objects x . import(export(x)) === x
+         forall unmanaged objects x . export(import(x)) === x
+
+ - Strong Subtyping
+     Subtyping must be respected over the boundary:
+        forall managed objects x .
+          if x is instance of T and T is a subtype of U and U is non-normal then
+          import(U)(export(T)(x)) === x
+
+ - Weak Subtyping
+     Subtyping must be respected over the boundary, but only between types which have the same interop style:
+        forall managed objects x .
+          if x is instance of T and T is a subtype of U and U and T are both style P (where P is not 'Normal') then
+          import(U)(export(T)(x)) === x
+
+Type Styles
+~~~~~~~~~~~
+
+When compiling to JavaScript, some CLR definitions are clearly unimplementable in JavaScript. We allow any
+assembly, type, method, field, event or property may be marked as "not supported", which effectively makes those
+definitions invisible to programs compiled to JavaScript. Not-supportedness is poisonous: if A
+(statically) depends on B and B is not supported then A is not supported. In what follows we assume
+not supported definitions have already been removed, and the resulting program has remained type correct.
+
+We refer to the built-in value types of sbyte, int16, int32, int64, byte, uint16, uint32, uint64, single, double,
+and the built-in reference type of string, as "primitive" types. These types are called out separately because:
+ 1. They are immutable.
+ 2. They are cheap to serialize/deserialize to/from JavaScript literals.
+ 3. The IL2JS runtime system represents them as JavaScript numbers or strings, which are also immutable.
+ 4. For strings, the JavaScript String prototype is assigned a type field. Thus a string created on the
+    unmanaged side is already a legal managed string.
+
+Some types must be handled specially:
+
+ - Nullable<T>: Nullable is special because we identify the CLR 'no-value' Nullable with the JavaScript 'null' value.
+
+ - ref T:       Pointer types are special because in IL2JS mode they are exported and imported using their IL2JS
+                runtime representation. In particular, the 'this' parameter of a method on a value type is exported
+                and imported as its underlying pointer. This is intended only for the runtime system. Pointer
+                types cannot be imported or exported in CLR mode.
+
+ - Delegates:   Delegates are special because we structurally coerce them between their managed and
+                unmanaged versions. The "work" involved in coercion is proportional to the number of
+                delegate arguments, and does not depend on the types of those arguments. Export builds a new
+                delegate which imports arguments, invokes the original delegate, and exports the result (if any).
+                Import does the converse. Imported/exported wrappers may be tied together to avoid redundant work,
+                either by field or table, but this is not required. (Note that System.Delegate and
+                System.MulticastDelegate are not delagates, in the same way System.ValueType is not a value type).
+
+ - P[]:         (where P is a primitive type) Arrays of primitive values are special because we
+                structurally coerce them between their managed and unmanaged versions. The "work" involved in
+                coercion is proportional to the length of the array, but does not depend on the type of the
+                array elements. (In the IL2JS runtime, CLR arrays are represented by JavaScript arrays with some
+                additional fields, thus it is tempting to share the array object between managaged and unmanaged
+                versions. However, we must still create a copy of the array on import and export to protect
+                against mutation.)
+
+ - Structs:     Structs which happen to be primitive types (eg int) are 'Primitive'. In IL2JS mode structs may
+                also be annotated as 'Primitive', but not in CLR mode. All other structs cannot cross the
+                interop boundary.
+
+All other types fall into one of four 'styles':
+
+ - Primitive:   All primitive types have 'Primitive' style. In IL2JS mode, additional types may be marked
+                as 'Primitive'. Instances are objects with a merge of managed and unmanaged fields. If a
+                constructor is imported then the fields of the unmanaged JavaScript object it returns are copied
+                directly into the managed object, and the unmanaged object is subsequently ignored. Primitives objects
+                are imported and exported as themselves. This style offers no protection against collision of managed
+                and unmanaged fields within the same object, so is not intended for the end-user.
+
+ - Normal:      Instances are ordinary managed objects. If they cross into the unmanaged world, they must be
+                treated as abstract values which cannot be accessed or mutated, only passed back to the managed
+                world via a delegate or exported method, or ignored. Instances may only be created on the managed
+                side. Since unmanaged JavaScript cannot "reach into" these instances, they may be exported as
+                any arbitrary JavaScript proxy, provided there exists a mechanism to recover the original managed
+                object on import.
+
+ - Keyed:       Instances consist of a managed wrapper around the unmanaged instance. The managed-to-unmanaged
+                association may be implemented by a field or table. The unmanaged-to-managed association is
+                via a designated "primary key" field whose value is unique over all unmanaged instances of the type
+                which specified the 'Keyed' style (but not necessarily unique over all unmanaged instances in the
+                runtime). Export recovers the unmanaged instance, while import attempts to recover any existing
+                wrapper, or construct a new wrapper if none can be found. The programmer must call
+                JSContext::Dispose to indicate no further interop is required on a given managed object.
+
+ - Proxied:     Instances also consist of a managed wrapper around the unmanaged instance, with the
+                managed-to-unmanaged association implemented by field or table. However, there is no
+                unmanaged-to-managed association, and each import will create a fresh wrapper. Thus referential
+                equality of managed instances must be decided by referential equality on their contained unmanaged
+                instances. Managed instances cannot contain fields. The programmer must call
+                JSContext::Dispose to indicate no further interop is required on a given managed object.
+
+
+We may determine the style of a type using these classification rules:
+ - Static types are 'Normal'.
+ - Nullable<_>, pointers, delegates and arrays are special, as mentioned above.
+ - If U has style S, S is not 'Normal' or 'Primitive', and T derives from U, then T has style S.
+ - If T is not covered by above and is annotated as style S (where S cannot be 'Normal') then T is S.
+ - If C<_> has style S then C<T> has style S for all types T.
+ - If T has any instance (including constructor) imports, or any instance (but not constructor) exports, it is 'Keyed'
+ - All other types (including System.Object and interface types) are 'Normal'.
+
+Constructors
+~~~~~~~~~~~~
+
+We have two distinct paths for constructing 'Keyed' or 'Proxied' instances:
+ - We may invoke an imported constructor, which assumes the underlying JavaScript function returns the initialized
+   unmanaged instance.
+ - We may receive a new unmanaged JavaScript instance from the result of an imported method, or the argument of
+   an exported method or delegate.
+
+In both cases, we need a way to control the initialization of the corresponding managed object. In particular,
+we may need to reach-in to the unmanaged object in order to initialize the managed object.
+
+('Normal' types are constructed as per the CLR constructor rules. 'Primitive' types are constructed either by
+a normal CLR constructor, by an imported constructor, or by unmanaged JavaScript, and it is up to the programmer
+to keep these three methods coherent.)
+
+To this end we introduce a special type:
+
+  namespace Microsoft.LiveLabs.JavaScript {
+      class JSContext {
+          private JSContext();
+          public static void Dispose(object obj);
+          public bool HasField(string name);
+          public T GetField<T>(string name);
+          public void SetField<T>(string name, T val);
+      }
+  }
+
+We allow any 'Keyed' or 'Proxied' type T to implement a family of special "importing constructor" with signatures:
+
+  T(JSContext ctxt, <zero or more arguments>)
+
+It is the programmer's responsibility:
+ - to avoid infinite regress by ensuring importing constructors do not implicitly or explicitly chain to
+   an imported constructor.
+ - to avoid creating managed instances without corresponding unmanaged instances by ensuring the importing
+   constructors are never invoked by 'new'.
+
+If T does not contain a constructor with signature T(JSContext ctxt, ...), then one is created according to
+the following rules:
+
+ - If T derives from U and U has U(JSContext ctxt) (either defined by user or created), then
+
+     T(JSContext ctxt) : base(ctxt) {}
+
+ - Otherwise, if T derives from U and U is 'Normal' and U has constructor U(), then
+
+     T(JSContext ctxt) : base() {}
+
+ - Otherwise, T is illegal.
+
+An importing constructor may not itself be imported. An importing constructor is invoked from an imported
+constructor under the following circumstances:
+
+ - If T has an imported constructor
+
+     T(<zero or more arguments)
+
+   and T has constructor
+
+     T(JSContext ctxt, <matching arguments>)
+
+   then the imported constuctor invokes the above constructor with a context object and the arguments of
+   the original constructor. The context object allows the constructor to "temporarily" access the
+   unmanaged object via HasField, GetField and SetField
+
+ - Otherwise, if T has an imported constructor
+
+     T(<zero or more arguments)
+
+   and T has constructor (either defined by user or created)
+
+     T(JSContext ctxt)
+
+   then the importing constuctor invokes the above constructor with a context object only.
+
+An importing constructor with signature
+
+     T(JSContext ctxt)
+
+is invoked when an unmanaged object without associated managed object is imported.
+
+Type Classifiers
+~~~~~~~~~~~~~~~~
+
+Both 'Proxied' and 'Keyed' root types may supply a type classifier function. Given the assembly name
+of the assembly containing the root type and an instance, the type classifier function may return
+either a qualified type name or null. The former indicates the instance should be regarded as belonging
+to the named type on the managed side. The latter indicates the instance should be regarded as the type
+under which it is imported (which may be derived from the root type containing the classifier function.)
+
+Note that objects are imported and exported based on their static type and not their dynamic type. For example,
+an object whose dynamic type has style 'Keyed' may be exported as type object, in which case the managed wrapper
+is passed unchanged to the unmanaged world. In this case, the object must be imported back as type object also.
+However, as mentioned above, types may have type classifiers which may influence the dynamic type of an imported
+instance.
+
+Validity of Type Styles
+~~~~~~~~~~~~~~~~~~~~~~~
+
+We define the 'root type' of a type T to be the unique type U s.t.:
+ - T is U or is a derived type of U
+ - U has the same style as T
+ - U's immediate base type has style 'Normal' or 'Primitive'
+Thus the root type represents the base of a heirachy of types which share the same style.
+
+We have the following validity rules:
+ - No class may be declared as 'Normal'. Classes are declared 'Keyed', 'Proxied' or 'Primitive' using custom
+   attributes described in the next section.
+ - Fields may not be imported or exported (however properties, since they are implemented as methods,
+   may be imported and exported).
+ - Any type may appear in the argument and result types of imported and exported methods, constructors,
+   properties and events.
+ - A 'Normal' type must not contain:
+    - an imported constructor
+    - an imported instance property or event
+    - an exported instance property, event or method
+ - A value type cannot be 'Proxied' or 'Keyed', but may be 'Primitive' or 'Normal'.
+ - A 'Proxied' type must not contain fields or any exported instance properties, events or methods.
+ - A 'Keyed' type must contain exactly one 'Key' property (from supertype or type itself)
+ - A class declared as style S may derive from a type of style S, style 'Normal', or style 'Primitive'.
+
+We assume the programmer obeys these subtyping rules:
+ - If an object is exported under a type with style S and later re-imported, it's imported type also has style S.
+   For example, the programmer should not export using a 'Proxied' type but import as object. However, the
+   type of the import need not be the same, or even related via subtyping, to the type of the export.
+ - If an object is exported as a value type and later re-imported, it's imported type must be the
+   same value type. For example, the programmer should not export as a struct but import as object.
+In other words, the interop mechanism only respects subtyping between types A and B if they agree on both their
+style and boxity. In particular, we don't allow boxed values to be exported as values, nor values to be imported
+as boxed values:
+ - We can't box on import since the JavaScript value doesn't carry enough type information to place in the box.
+ - We can't unbox on export in the IL2JS runtime since it wreaks havoc with code which expects to export a 'this'
+   pointer (recall pointers and boxes have the same representation)
+
+Exceptions
+~~~~~~~~~~
+
+If an exception is throw by an imported method, it could either be:
+ - A managed exception thrown by an exported method or delegate which the imported method called. In this case
+   we wish to throw the same exception to the managed side.
+ - An arbitrary JavaScript object throw by the unmanaged JavaScript method itself. In this case we wish
+   to wrap the exception as a JSException. The original exception object is available in the UnderlyingException
+   field, of type JSObject.
+
+Dually, if an exception is throw by an exported method or delegate, it could either be:
+ - A wrapped JSException caught from an imported method call. In this case we wish to throw the UnderlyingException.
+ - A managed exception, in which case we wish to throw it as a 'Normal' object.
+
+This special import/export behaviour is captured below:
+
+    (* XREF1493 *)
+    function ImportException(x) {
+        if (x == null || x.T == null)
+            return root.JSException(x);
+        if (root.IsAssignableTo(x.T, root.ExceptionType))
+            return x; // ie import as 'Normal'
+        return root.JSException(x);
+    }
+
+    (* XREF1499 *)
+    function ExportException(x) {
+        if (x == null)
+            return null;
+        if (root.IsAssignableTo(x.T, root.JSExceptionType))
+            return root.GetUnderlyingException(x);
+        return x; // ie export as 'Normal'
+    }
+
+Note that all exception types, including JSException, are 'Normal', and that the import and export for these
+types are defined as for 'Normal' reference types. It is only when an exception is actally thrown across the
+interop boundary that the above special import/export behaviour comes into play.
+
+Import and Export
+~~~~~~~~~~~~~~~~~
+
+We now describe the 'Import' and 'Export' operations for all types. We describe them as they appear in the
+IL2JS runtime system. The corresponding implementations in the CLR are similar, except where explicitly noted.
+
+  - SPECIAL CASE: For Nullable<T>:
+
+    (* XREF1223 *)
+    function Import(x) {
+        var t = <type structure of T>;
+        if (x == null)
+            // A null from the unmanaged side denotes the "no-value" nullable, which the
+            // managed side reperesents as null
+            return null;
+        if (!t.IsValidJavaScriptType(typeof x))
+            throw root.InvalidCastException();
+        // Clone value
+        return t.C(x);
+    }
+
+    (* XREF1229 *)
+    function Export(x) {
+        var t = <type structure of T>;
+        if (x == null)
+            return null;
+        // Clone value
+        return t.C(x);
+    }
+
+ - SPECIAL CASE: ref T:
+
+    function Import(x) {
+        if (x == null || x.T == null || x.R == null || x.W == null)
+            throw root.InvalidCastException();
+        return x;
+    }
+
+    function Export(x) {
+        return x;
+    }
+
+ - SPECIAL CASE: For delegate R D(A a): (w.l.o.g. considering one argument delegate with return value)
+
+    (* XREF1039 *)
+    function Import(f) {
+        var t = <type structure of A>;
+        var u = <type structure of R>;
+        var dt = <type structure of D>;
+        if (f == null)
+            return null;
+        // Must be a function
+        if (typeof f != "function")
+            throw root.InvalidCastException();
+        if (f.Managed == null)
+            f.Managed = root.NewDelegate(null, function(x) { return u.Import(f(t.Export(x))) }, dt);
+        f.Managed.Unmanaged = f;
+        return f.Managed;
+    }
+
+    (* XREF1049 *)
+    function Export(d) {
+        var t = <type structure of A>;
+        var u = <type structure of R>;
+        if (d == null)
+            return null;
+        if (d.Unmanaged == null)
+            d.Unmanaged = function(x) { return u.Export(d(t.Import(x))) };
+        d.Unmanaged.Managed = f;
+        return d.Unmanaged;
+    }
+
+ - SPECIAL CASE: For Array<P> where P is a primitive type:
+
+    (* XREF1451 *)
+    function Import(x) {
+        if (x == null)
+            return null;
+        // Must be an array
+        if (x.length === undefined)
+            throw root.InvalidCastException();
+        var t = <type structure of P>;
+        // Clone array, but no need to clone array elements since they are primitive
+        var y = root.NewArray(t, x.length);
+        for (var i = 0; i < x.length; i++) {
+            if (x[i] == null)
+                y[i] = t.D();
+            else {
+                // Element must be correctly typed
+                if (!t.IsValidJavaScriptType(typeof x[i]))
+                    throw root.InvalidCastException();
+                y[i] = x[i];
+            }
+        }
+        return y;
+    }
+
+    (* XREF1453 *)
+    function Export(x) {
+        if (x == null)
+            return null;
+        // Clone array
+        var y = new Array(x.length);
+        for (var i = 0; i < x.length; i++)
+          y[i] = x[i];
+        return y;
+    }
+
+ - For 'Normal' or 'Primitive' value type T:
+
+    (* XREF1319 *)
+    function Import(x) {
+        var t = <type structure of T>;
+        if (x == null)
+            // Convert JavaScript null to the default value for type
+            return t.D();
+        if (x.T == null || x.T.Id != t.Id)
+            throw root.InvalidCastException();
+        // Clone value
+        return t.C(x);
+    }
+
+    (* XREF1327 *)
+    function Export(x) {
+        var t = <type structure of T>;
+        // Clone value
+        return t.C(x);
+    }
+
+ - For 'Normal' or 'Primitive' reference type T:
+
+    (* XREF1009 *)
+    function Import(x) {
+        var t = <type structure of T>;
+        if (x == null)
+            return null;
+        // Must be appropriately typed
+        if (x.T == null || !root.IsAssignableTo(x.T, t))
+            throw root.InvalidCastException();
+        return x;
+    }
+
+    (* XREF1013 *)
+    function Export(x) {
+        return x;
+    }
+
+ - For 'Keyed' type T:
+
+    (* XREF1093 *)
+    function Import(x) {
+        var t = <type structure of T>;
+        var u = <type structure of root of T>;
+        var key = <T.Key>;
+        if (x == null)
+            return null;
+        var y;
+        if (x[key] == null) {
+            // Give object a unique key, pair it with a new managed object
+            var v = t;
+            if (u.TypeClassifier != null) {
+                var n = u.TypeClassifier(u.Assembly.Name, x);
+                if (n != null)
+                    v = root.ResolveQualifiedType(n);
+            }
+            y = v.I(v);
+            // Invoke default "importing constructor"
+            v.IC(y, x);
+            y.Unmanaged = x;
+            x[key] = y.Id;
+            var k = root.QualifiedTypeName(u.Assembly, u.Name) + "::" + x[key];
+            root.KeyToObject[k] = y;
+        }
+        else {
+            // Try to retrieve paired object
+            var k = root.QualifiedTypeName(u.Assembly, u.Name) + "::" + x[key];
+            y = root.KeyToObject[k];
+            if (y == null)
+            {
+                // Pair with new managed object
+                var v = t;
+                if (u.TypeClassifier != null) {
+                    var n = u.TypeClassifier(u.Assembly.Name, x);
+                    if (n != null)
+                        v = root.ResolveQualifiedType();
+                }
+                y = v.I(v);
+                // Invoke default "importing constructor"
+                v.IC(y, x);
+                y.Unmanaged = x;
+                root.KeyToObject[k] = y;
+            }
+        }
+        // Managed object must be appropriately typed
+        if (!root.IsAssignableTo(y.T, t))
+            throw root.InvalidCastException();
+        return y;
+    }
+
+    (* XREF1097 *)
+    function Export(x) {
+        if (x == null)
+            return null;
+        // Object must have been previously imported
+        if (x.Unmanaged == null)
+            throw root.InvalidOperationException();
+        return x.Unmanaged;
+    }
+
+ - For 'Proxied' type T:
+
+    (* XREF1051 *)
+    function Import(x) {
+        var t = <type structure of T>;
+        var u = <type structure of root of T>;
+        if (x === null)
+            return null;
+        // JSObject needs to be able to represent 'undefined' as a valid unmanaged object value. We encode it as null.
+        if (x === undefined)
+            x = null;
+        // Determine type
+        var v = t;
+        if (x != null && u.TypeClassifier != null) {
+            var n = u.TypeClassifier(u.Assembly.Name, x);
+            if (n != null)
+                v = root.ResolveQualifiedType(n);
+        }
+        var y = v.I(v);
+        // Invoke default "importing constructor"
+        v.IC(y, x);
+        y.Unmanaged = x;
+        return y;
+    }
+
+    (* XREF1061 *)
+    function Export(x) {
+        if (x == null)
+            return null;
+        var y = x.Unmanaged;
+        if (y === undefined)
+            // Object must have been previously imported
+            throw root.InvalidOperationException();
+        if (y === null)
+            // Undo encoding for 'undefined' introduced by Import above
+            y = undefined;
+        return y;
+    }
+
+Given the above we can revisit the desired properties:
+
+                             Normal      Keyed (1)   Proxied
+                             ----------  ----------  ----------
+  State 1                    holds       holds       holds
+  State 2                    holds       holds       holds
+  Reference equality 1       holds       holds       fails (2)
+  Reference equality 2       holds       holds       fails (2)
+  Strong subtyping                         (3)
+  Weak subtyping             holds       holds       holds
+
+  Notes: (1) However, suffers from potential memory leak.
+         (2) Import always creates a fresh wrapper.
+         (3) Always fails
+
+Methods (static or instance) and constructors (which resemble static methods) are imported and
+exported as if they were delegates of the appropriate type. Given this, we can see we reject
+imported constructors on normal types because the Import call (at least for reference types) will
+always throw.
+
+Interop Attributes
+~~~~~~~~~~~~~~~~~~
+
+Custom attributes on declarations influence how the managed and unmanaged JavaScript worlds may interoperate.
+
+The following fragment of JavaScript is accepted as legal scripts in imports:
+
+    FunctionExpression    ::= <as per JavaScript grammar>
+    Identifier            ::= <as per JavaScript grammar>
+    StringLiteral         ::= <as per JavaScript grammar>
+    DottedExpression      ::= PropertyName
+                            | DottedExpression '.' Identifier
+                            | DottedExpression '[' NumericLiteral ']'
+                            | DottedExpression '[' StringLiteral ']'
+    Script                ::= <empty>
+                            | DottedExpression
+                            | FunctionExpression
+
+The custom attributes understood by the compiler are as follows:
+
+    InteropAttributes     ::= ('[' InteropAttribute ']')*
+    InteropAttribute      ::= TypeAttribute
+                            | ImportAttribute
+                            | ExportAttribute
+                            | NotSupportedAttribute
+                            | NotExportedAttribute
+
+    TypeAttribute         ::= ('Proxy' | 'Keyed') '(' (TypeProperty (',' TypeProperty)*)? ')'
+    NamingAttribute       ::= 'Naming' '(' (NamingProperty (',' NamingProperty)*)? ')'
+    ImportAttribute       ::= ('Import' | 'ImportGet' | 'ImportSet' | 'ImportAdd' | 'ImportRemove' | 'ImportKey')
+                              '(' (ImportProperty (',' ImportProperty)*)? ')'
+    ExportAttribute       ::= ('Export' | 'ExportGet' | 'ExportSet' | 'ExportAdd' | 'ExportRemove')
+                              '(' (ExportProperty (',' ExportProperty)*)? ')'
+    NotSupportedAttribute ::= 'NotSupported' '(' (NotSupportedProperty, (',' NotSupportedProperty)*)? ')'
+    NotExportedAttribute  ::= 'NotExported'
+
+    TypeProperty          ::= 'Script' '=' Script
+    NamingProperty        ::= 'Qualification' '=' Qualification
+                            | 'NamespaceCasing' '=' Casing
+                            | 'TypeNameCasing' '=' Casing
+                            | 'PrefixNameCasing' '=' Casing
+                            | 'MemberNameCasing' '=' Casing
+                            | 'RemoveAccessorPrefix' '=' bool
+                            | 'RemoveAccessorUnderscore' '=' bool
+                            | 'DefaultKey' '=' DottedIdentifier
+    ImportProperty        ::= 'Script' '=' Script
+                            | 'PassRootAsArgument' '=' bool
+                            | 'PassInstanceAsArgument' '='  bool
+                            | 'Creation' '=' Creation
+                            | 'SimulateMulticastEvents' '=' bool
+                            | NamingProperty
+    NotSupportedProperty  ::= 'Reason' '=' string
+    ExportProperty        ::= 'Script' '=' Script
+                            | 'PassRootAsArgument' '=' bool
+                            | NamingProperty
+
+    (* Determines the body of an imported constructor when it does not specify a Script *)
+    Creation              ::= 'Constructor'
+                            | 'Object'
+                            | 'Array'
+    (* Indicates how the first letter of the various components of CLR-derived names should be capitalized. *)
+    Casing                ::= 'Exact'
+                            | 'Camel'     (* lower *)
+                            | 'Pascal'    (* upper *)
+    (* Indicates how the names of static members should be further qualified *)
+    Qualification         ::= 'None'
+                            | 'Full'
+                            | 'Type'
+
+NOTE: When importing instace methods, we allow the unmanaged JavaScript function to have been written in
+      'OO' style (PassInstanceAsArgument = false):
+           instance.f = function(arg) { ... this ... }
+      or 'Functional' style (PassIntanceAsArgument = true):
+           function f(instance, arg) { ... instance ... }
+
+      However, exported instance methods must always be in 'OO' style. (This restriction comes from
+      the managed interop implementation rather than the JavaScript interop. It is difficult to
+      construct the global-function to instance-function forwarder without using reflection, which
+      seems a lot of complexity for small benifit.)
+
+If an attribute has positional arguments, they are considered equivalent to the following property binding forms:
+
+  Proxy(str, ...)        ==> Proxy(Script = str, ...)
+  Keyed(str, ...)        ==> Keyed(Script = str, ...)
+  Import(str, ...)       ==> Import(Script = str, ...) (* similarly for the other import names *)
+  Export(str, ...)       ==> Export(Script = str, ...) (* similarly for the other export names *)
+  NotSupported(str, ...) ==> NotSupported(Reason = str, ...)
+
+InteropAttributes may be declared at any of the following CLR scopes:
+ - Assembly
+ - Member, which includes the specialized scopes:
+    - Type
+    - Property
+    - Event
+    - Method, which includes the specialized scopes:
+       - InstanceInitializer
+       - PropertyGetter
+       - PropertySetter
+       - EventAdder
+       - EventRemover
+
+Properties have some special cases for convenience:
+
+    [Import]extern int this[int i] { get; set; }
+        ==> implement as index into unmanaged JavaScript object
+
+    [Import]extern int G { get; set; }
+        ==> use "G" (after name adjustment) as name of field on unmanaged object
+            (similarly for static properties)
+
+    extern int G { [Import]get; [Import]set;}
+ == [ImportGet][ImportSet]extern int G { get; set; }
+        ==> use imported "get_G" and "set_G" functions (after name adjustment) to implement property
+
+    [Import(Script = "g")]extern int G { get; set; }
+        ==> use "g" as name of field on unmanaged object
+            (similarly for static properties)
+
+    extern int G { [Import(Script = "get")]get; [Import(Script = "set")]set; }
+ == [ImportGet(Script = "get")][ImportSet(Script = "set")]extern int G { get; set; }
+        ==> use imported "get" and "set" functions to implement property
+            (similarly for static properties)
+
+    [Export]int G { get; set; }
+    int G { [Export]get; [Export]set;}
+ == [ExportGet][ExportSet]int G { get; set; }
+        ==> export as "get_G" and "set_G" (after name adjustment)
+            (similarly for static properties)
+
+    [Export(Script = "h.g")]int G { get; set; }
+        ==> export as "h.get_g" and "h.set_g" (possibly without underscore)
+            (similarly for static properties)
+
+    int G { [Export(Script = "get")]get; [Export(Script = "set")]set; }
+ == [ExportGet(Script = "get")][ExportSet(Script = "set")]int G { get; set; }
+        ==> export as "get" and "set"
+            (similarly for static properties)
+
+Similarly, events have some special cases:
+
+    [Import]extern event T E { add; remove; }
+        ==> use "E" (after name adjustment) as name of field holding event handler in unmanaged object
+            (similarly for static events)
+
+    [Import(Script = "e")]extern event T E { add; remove; }
+        ==> use "e" as name of field holding event handler in unmanaged object
+            (similarly for static events)
+
+    [ImportAdd][ImportRemove]extern event T E { add; remove; }
+        ==> use "add_E" and"remove_E" functions (after name adjustment) to install and uninstall
+            event handler in unmanaged object
+            (similarly for static events)
+
+    [ImportAdd(Script = "add")][ImportRemove(Script = "remove")]extern event T E { add; remove; }
+        ==> use "add" and"remove" functions to install and uninstall event handler in unmanaged object
+            (similarly for static events)
+
+    [Export]event T E { add; remove; }
+        ==> export as "add_E" and "remove_E" (after name adjustment)
+            (similarly for static events)
+
+    [Export Script="h.e"]event T E { add; remove; }
+        ==> export as "h.add_e" and "h.remove_e" (possibly without underscore)
+            (similarly for static events)
+
+    [ExportAdd][ExportRemove]event T E { add; remove; }
+        ==> export as "add_E" and "remove_E" (after name adjustment)
+            (similarly for static events)
+
+    [ExportAdd(Script = "add")][ExportRemove(Script = "remove")]event T E { add; remove; }
+        ==> export as "add" and "remove"
+            (similarly for static events)
+
+In the following we assume attributes and properties have been simplified according to these rules:
+
+ - An 'Import' or 'Export' attribute on a PropertyGetter (PropertySetter) is replaced by a 'ImportGet' or 'ExportGet'
+   ('ImportSet' or 'ExportSet') attribute on the containing Property, with the same properties.
+
+Attributes are subject to the following restrictions:
+ - If a node has attributes A and A', then A must not be a sub attribute of A'.
+ - Type attributes may only appear at Assembly and Type scope.
+ - 'ImportKey' may only appear:
+     - at Property scope, and;
+     - on exactly once such Property per type, and;
+     - within classes of 'Keyed' style whose base type is not 'Keyed'.
+ - 'ImportSet', 'ImportGet', 'ExportSet' and 'ImportGet' may only appear at Property scope.
+ - 'ImportAdd', 'ImportRemove', 'ExportAdd', 'ExportRemove' may only appear at Event scope.
+ - Polymorphic methods may not be exported.
+ - Static methods and constructors of higher-kinded types may not be exported.
+ - Instance methods of higher-kinded types may be exported. The types at which the higher-kinded type is instantiated
+   are recovered from the instance object.
+ - Polymorphic methods may be imported. The type parameters at which the polymorphic method is instantiated are not
+   available to the JavaScript world.
+ - Methods of higher-kinded types may be imported. The type parameters at which the higher-kinded type is instantiated
+   are not available to the JavaScript world.
+ 
+Properties are subject to the following restrictions:
+ - 'Script' cannot be bound to a FunctionExpression:
+    - on 'Import' attributes at Method scope if the method is virtual.
+    - on 'Import' or 'ImportKey' attributes at Property scope (but ok to be a FunctionExpression on 'Import'
+      attributes at 'PropertyGetter' and 'PropertySetter' scope, and ok on 'ImportGet' and 'ImportSet'
+      attributes at Property scope).
+    - on 'Import' attributes at Events scope (but ok to be a FunctionExpression on 'Import' attributes at
+      'EventAdder' and 'EventRemover' scope, and ok on 'ImportAdd' and 'ImportRemove' attributes at
+      Event scope).
+
+We say the the parent of:
+ - a top-level Type is its containing Assembly
+ - a nested Type is its containing Assembly (and not its declaring Type)
+ - an overridding Method is its overridden Method, provided the overridden method is imported
+ - a Method (not covered by above), InstanceInitializer, StaticInitializer, Property or Event is its declaring Type
+ - a PropertyGetter or PropertySetter is its declaring Property
+ - an EventAdder, EventRemover or EventCaller is its declaring Event
+
+The 'sub attribute' relationship is defined as:
+ - 'ImportGet', 'ImportSet', 'ImportAdd', 'ImportRemove' and 'ImportKey' are sub attributes of 'Import'.
+ - similarly for the export attribute family.
+ - 'Import' and 'Export' are sub attributes of 'Naming'.
+ - plus reflexivity and transitivity.
+
+We say node N has attribute A, written N.IsA, iff
+ - N has an attribute A', where A' is a sub attribute of A.
+ - otherwise, if N has a parent M, then M has attribute A.
+ - otherwise, false.
+
+We say the value of property P of attribute A on node N, written N.A::P, is:
+ - the value of P as declared on an attribute A' of node N, where A' is a sub attribute of A.
+ - otherwise, if N has a parent M, then the value of property P of attribute A on node M.
+ - otherwise the default value for P given by the following table:
+
+    Property                    Value
+    --------------------------  ------------------
+    Script                      null
+    PassRootAsArgument          false
+    PassInstanceAsArgument      true if Script is a function, otherwise false 
+    Creation                    Constructor
+    Qualification               None
+    NamespaceCasing             Exact
+    TypeNameCasing              Exact
+    PrefixNameCasing            Camel
+    MemberNameCasing            Camel
+    RemoveAccessorPrefix        false
+    RemoveAccessorUnderscore    false
+    DefaultKey                  null
+    SimulateMulticastEvents     false
+    Reason                      null
+
+Given a class C we determine the style of C as follows:
+ - If C has the 'Proxy' attribute, it is 'Proxied'.
+ - Otherwise if C has the 'Keyed' attribute, it is 'Keyed'.
+ - Otherwise if C is derived from type T with style S and S is not 'Normal', then C is style S.
+ - Otherwise if C has any imported or exported instance methods, or an imported constructor, then C is 'Keyed'.
+ - Otherwise C is 'Normal'.
+
+The 'key name' of class C, written C.Key, is determined as follows:
+ - If C or a supertype of C has a 'ImportKey' attribute on property 'prop', then the key name is:
+       prop.Import::Script ?? RecaseMember(prop)
+ - Otherwise:
+       C.Naming::DefaultKey
+
+Often the names of imported JavaScript definitions can be systematically derived from the CLR name
+representing them. The 'Qualification', 'NamespaceCasing', 'TypeNameCasing',
+'PrefixNameCasing', 'MemberNameCasing' and 'RemoveAccessorUnderscore' properties allow this
+derivation to be controlled.
+
+    Recase(string str, c : Casing) : string =
+        if c == 'Exact' then
+            str
+        else if c == 'Pascal' then
+            UppercaseFirstChar(str)
+        else (* c == 'Camel' *)
+            LowercaseFirstChar(str)
+
+    RecaseMember(member : Member) : DottedIdentifier =
+        Recase(member.Name, member.Naming::MemberNameCasing)
+
+    RecaseType(member : Member) : DottedIdentifier =
+        Recase(member.DeclaringType.Name, member.Naming::TypeNameCasing)
+
+    RecaseProperty(getter : PropertyGetter) : DottedIdentifier =
+        Recase(getter.DeclaringProperty.Name, getter.Naming::MemberNameCasing)
+
+    RecaseProperty(setter : PropertySetter) : DottedIdentifier =
+        Recase(setter.DeclaringProperty.Name, setter.Naming::MemberNameCasing)
+
+    RecaseEvent(adder : EventAdder) : DottedIdentifier =
+        Recase(adder.DeclaringEvent.Name, adder.Naming::MemberNameCasing)
+
+    RecaseEvent(remover : EventRemover) : DottedIdentifier =
+        Recase(remover.DeclaringEvent.Name, remover.Naming::MemberNameCasing)
+
+    ReprefixName(member : Member, prefix : string, id : string) : DottedIdentfier =
+        let id' = if id begins with (prefix + "_") then id without initial (prefix + "_") else id in
+        return Recase(prefix, member.Naming::PrefixNameCasing) +
+               (member.Naming::RemoveAccessorUnderscore ? "" : "_") +
+               Recase(id', member.Naming::MemberNameCasing)
+
+    ExpandedName(member : Member, prefix : string, d : DottedIdentifier) =
+        let id1 '.' ... '.' idn = d in
+        let idn' = Recase(prefix, member.Naming::PrefixNameCasing +
+                   (member.Naming::RemoveAccessorUndescore ? "" : "_" ) +
+                   idn in
+        id1 '.' ... '.' idn-1 '.' idn'
+
+    QualifiedName(member : Member, script : Script) : Script =
+        if script is DottedIdentifier && (member is InstanceInitializer || member.IsStatic) then
+            let t = member.DeclaringType in
+            let nc = member.Naming::Qualification in
+            if nc == 'None' then
+                script
+            else if nc =='Type' then
+                Recase(t.Name, member.Naming::TypeNameCasing) '.' script
+            else (* nc == 'Full' *)
+                Recase(t.Namespace, member.Naming::NamespaceCasing) '.'
+                Recase(t.Name, member.Naming::TypeNameCasing) '.' script
+        else
+            script
+
+Import and Export Scripts
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+We define the underlying script representing each imported or exported member as follows:
+
+    FinalImportScript(method : Method, script : Expression) : Expression =
+        if method.Import::PassRootAsArgument then
+            let n = <arity of method> in
+            "function (x1, ..., xn) { return script(root, x1, ..., xn); }"
+        else
+            script
+
+    (* XREF1153 *)
+    ImportScript(method : Method) : Expression =
+        let f = QualifiedName(method, method.Import::Script ?? RecaseMember(method)) in
+        if method.IsStatic || f is FunctionExpression || method.Import::PassInstanceAsArgument then
+            FinalImportScript(method, f)
+        else
+            let n = <arity of method> in
+            if method.Import::PassRootAsArgument then
+                "function (x1, x2, ..., xn) { return x1.f(root, x2, ..., xn); }"
+            else
+                "function (x1, x2, ..., xn) { return x1.f(x2, ..., xn); }"
+
+    FinalExportScript(method : Method, script : Expression) : Expression =
+        if script is FunctionExpression then
+            if method.Export::PassRootAsArgument then
+                if method.IsStatic then
+                    "function (v) { script(root, v); }"
+                else
+                    "function (i, v) { script(root, i, v); }"
+            else
+                script
+        else
+            if method.IsStatic then
+                "function(v) { script = v; }"
+            else
+                "function(i, v) { i.script = v; }"
+
+    (* XREF1163 *)
+    ExportScript(method : Method) : Expression =
+        FinalExportScript(method, QualifiedName(method, method.Export::Script ?? RecaseMember(method)))
+
+    (* XREF1171 *)
+    ImportScript(init : InstanceInitializer) : Expression =
+        let n = <arity of init> in
+        if init.Import::Script == null then
+            let oi = init.Import::Creation in
+            if oi == 'Array' then
+                "function(x2, ..., xn) { return [x2, ..., xn]; }"
+            else if oi == 'Object' then
+                if n > 1 then
+                    undefined
+                else
+                    "function () { return {}; }"
+            else (* oi == 'Constructor' *)
+                let f = QualifiedName(init, RecaseType(init)) in
+                "function (x2, ..., xn) { return new f(x2, ..., xn); }"
+        else if init.Import::Script is a DottedExpression then
+            let f = QualifiedName(init, init.Import::Script) in
+            "function(x2, ..., xn) { return new f(x2, ..., xn); }"
+        else
+            FinalImportScript(init, init.Import::Script)
+
+    (* XREF1181 *)
+    ExportScript(init : InstanceInitializer) : Expression =
+        let f = QualifiedName(init, init.Export::Script ?? RecaseType(init)) in
+        if f is FunctionExpression then
+            if init.Export::PassRootAsArgument then
+                "function (v) { f(root, v); }"
+            else
+                f
+        else
+            "function(v) { f = v; }"
+
+    (* XREF1187 *)
+    ImportScript(getter : PropertyGetter) : Expression =
+        if getter.IsImportGet then
+            FinalImportScript(getter, QualifiedName(getter, getter.Import::Script ?? ReprefixName(getter, "get", getter.Name)))
+        else if getter.Import::Script == null && getter.Arity == 2 && !getter.IsStatic then
+            "function (i, x) { return i[x]; }"
+        else
+            let f = QualifiedName(getter, getter.Import::Script ?? RecaseProperty(getter)) in
+            if getter.IsStatic && n == 0 then
+                "function () { return f; }"
+            else if !getter.IsStatic && n == 1 then
+                "function (i) { return i.f; }"
+            else
+                undefined
+
+    ImportScript(setter : PropertySetter) : Expression =
+        if setter.IsImportSet then
+            FinalImportScript(setter, QualifiedName(setter, setter.Import::Script ?? ReprefixName(setter, "set", setter.Name)))
+        else if setter.Import::Script == null && setter.Arity == 3 && !setter.IsStatic then
+            "function (i, x, v) { i[x] = v; }"
+        else
+            let f = QualifiedName(setter, setter.Import::Script ?? RecaseProperty(setter)) in
+            if setter.IsStatic && n == 1 then
+                "function (v) { f = v; }"
+            else if !setter.IsStatic && n == 2 then
+                "function (i, v) { return i.f = v; }"
+            else
+                undefined
+
+    (* XREF1193 *)
+    ExportScript(getter : PropertyGetter) : Expression =
+        if getter.IsExportGet then
+            FinalExportScript(getter, QualifiedName(getter, getter.Export::Script ?? ReprefixName(getter, "get", getter.Name)))
+        else
+            FinalExportScript(getter, QualifiedName(getter, ExpandedName(getter, "get", getter.Export::Script ?? RecaseProperty(getter))))
+
+    ExportScript(setter : PropertySetter) : Expression =
+        if setter.IsExportSet then
+            FinalExportScript(setter, QualifiedName(setter, setter.Export::Script ?? ReprefixName(setter, "set", setter.Name)))
+        else
+            FinalExportScript(setter, QualifiedName(setter, ExpandedName(setter, "set", setter.Export::Script ?? RecaseProperty(setter))))
+
+    (* XREF1201 *)
+    ImportScript(adder : EventAdder) : Expression =
+        if adder.IsImportAdd then
+            FinalImportScript(adder, QualifiedName(adder, adder.Import::Script ?? ReprefixName(adder, "add", adder.Name)))
+        else
+            let f = QualifiedName(adder, adder.Import::Script ?? RecaseEvent(adder)) in
+            if adder.IsStatic then
+                "function(d) { f = d; }"
+            else
+                "function(i, d) { i.f = d; }
+
+    ImportScript(remover : EventRemover) : Expression =
+        if remover.IsImportRemove then
+            FinalImportScript(remover, QualifiedName(remover, remover.Import::Script ?? ReprefixName(remover, "remove", remover.Name)))
+        else
+            let f = QualifiedName(remover, remover.Import::Script ?? RecaseEvent(remover)) in
+            if remover.IsStatic then
+                "function(d) { f = d; }"
+            else
+                "function(i, d) { i.f = d; }"
+
+    (* XREF1213 *)
+    ExportScript(adder : EventAdder) : Expression =
+        if adder.IsExportAdd then
+            FinalExportScript(adder, QualifiedName(adder, adder.Export::Script ?? ReprefixName(adder, "add", adder.Name)))
+        else
+            FinalExportScript(adder, QualifiedName(adder, ExpandedName(adder, "add", adder.Export::Script ?? RecaseEvent(adder))))
+
+    ExportScript(remover : EventRemover) : Expression =
+        if remover.IsExportRemove then
+            FinalExportScript(QualifiedName(adder, remover.Export::Script ?? ReprefixName(remover, "remove", remover.Name)))
+        else
+            FinalExportScript(QualifiedName(adder, ExpandedName(remover, "remove", remover.Export::Script ?? RecaseEvent(remover))))
+
+
+Imported and Exported Members
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+We may ask the following questions of each definition node:
+
+    IsSupported : Node -> bool
+        Is definition available to programs when targetting JavaScript?
+        If not, all the following are undefined.
+
+    Style : Type -> Style
+        What representation style do instance of type use for JavaScript interop, where Style is
+        'Normal', 'Keyed' or 'Closed'.
+
+    TypeClassifier : Type -> Script
+        If type has style 'Keyed' or 'Proxied', the type classifier function on root of type, or null
+        type classifier function is specified.
+
+    IsImported : Node -> bool
+        Is definition's implementation supplied by unmanaged JavaScript?
+        If not, the result of Import is undefined.
+
+    Import : Node -> Expression
+        The JavaScript function representing the imported unmanaged definition, ready to be bound into
+        the appropriate managed JavaScript structure and be invoked from the managed world.
+
+    IsExported : Node -> bool
+        Is managed definition available to unmanaged JavaScript?
+        If not, the result of Export is undefined.
+
+    Export : Node -> Expression
+        The JavaScript function which will effect the export by binding the exported definition
+        into the global unmanaged JavaScript scope or the unmanaged part corresponding to a managed object.
+
+These questions are answered by the following definitions:
+
+    (*
+     * Common
+     *)
+
+    (* XREF1103 *)
+    (* We may assume all type arguments of method and its declaring type are in scope, and thus
+       at1 .. atn and rt will be well-defined w.r.t. the run-time type specialization of the method
+       and its declaring type. *)
+    PrimImport(method : Method, script : Expression) : Expression =
+        let n = <arity of method> in
+        let at1 = <type structure of method argument 1 type> in
+        ...
+        let atn = <type structure of method argument n type> in
+        let rt = <type structure of method result type> in
+        let t = <type structure of method.DeclaringType> in
+        if method.IsStatic then
+            "function (x1, ..., xn) {
+                 try {
+                     return rt.Import(script(at1.Export(x1), ..., atn.Export(xn)));
+                 }
+                 catch (e) {
+                     throw root.ImportException(e);
+                 }
+             }"
+        else
+            "function (x1, ..., xn) {
+                 try {
+                     return rt.Import(script(at1.ExportThis(x1), at2.Export(x2)..., atn.Export(xn)));
+                 }
+                 catch (e) {
+                     throw root.ImportException(e);
+                 }
+             }"
+
+    (* XREF1109 *)
+    (* We may assume all type arguments of method's declaring type are in scope, but method itself
+       must be monomorphic. *)
+    PrimExport(method : Method, script : Expression) : Expression =
+        let n = <arity of method> in
+        let at1 = <type structure of method argument 1 type> in
+        ...
+        let atn = <type structure of method argument n type> in
+        let rt = <type structure of method result type> in
+        let s = <slot for method> in
+        let t = <type structure of method.DeclaringType> in
+        if method.IsStatic then
+            "function () {
+                 script(function(x1, ..., xn) {
+                            try {
+                                return rt.Export(t.s(at1.Import(x1), ..., atn.Import(xn)));
+                            }
+                            catch (e) {
+                                throw root.ExportException(e);
+                            }
+                        });
+             }"
+        else
+            "function(x1) {
+                 script(at1.Export(x1),
+                        function(x2, ..., xn) {
+                            try {
+                                return rt.Export(t.s(x1, at1.Import(x2), ..., atn.Import(xn)));
+                            }
+                            catch (e) {
+                                throw root.ExportException(e);
+                            }
+                        });
+             }"
+
+    (*
+     * General
+     *)
+
+    IsSupported(node : Node) : bool = node.IsNotSupported
+
+    (*
+     * Types
+     *)
+
+    Style(type : Type) : Style = <the style of type as per above definition>
+
+    TypeClassifier(type : Type) : Script =
+        let s = Style(type) in
+        if s == 'Normal' then
+            null
+        else if s == 'Proxied' then
+            let root = <the root of type> in
+            root.Proxy::Script
+        else (* s == 'Keyed' *)
+            let root = <the root of type> in
+            root.Keyed::Script
+
+    (*
+     * Methods
+     *)
+
+    IsImported(method : Method) : bool = method.IsImport && method.IsExtern || method has Import attribute
+
+    Import(method : Method) : Expression = PrimImport(method, ImportScript(method))
+
+    IsExported(method : Method) : bool =
+        method.IsExport && !method.IsExtern && !method.IsNotExported ||
+        method.IsVirtual && method.OverriddenMethod != null && IsImported(method.MethodWhichIntroducedVirtualSlot)
+
+    Export(method : Method) : Expression = PrimExport(method, ExportScript(method))
+
+    (*
+     * Constructors
+     *)
+
+    IsImported(init : InstanceInitializer) : bool = init.IsImport && init.IsExtern || init has Import attribute
+
+    (* XREF1117 *)
+    Import(init : InstanceInitializer) : Expression =
+        let n = <arity of init> in
+        let at1 = <type structure of init argument 1 type> in
+        ...
+        let atn = <type structure of init argument n type> in
+        let t = <type structure of init.DeclaringType> in
+        let u = <type structure of init.DeclaringType.BaseType> in
+        let js = <type structure of JSObject> in
+        let script = ImportScript(init) in
+        let importingCtor = if init.DeclaringType has ctor(InteropStyle, JSObject, <init argument 2 type>, ..., <init argument n type>) then
+                                "t.<ctor>(x1, null, js.Import(y), x2, ..., xn);"
+                            else if init.DeclaringType has ctor(InteropStyle, <init argument 2 type>, ..., <init argument n type>) then
+                                "t.<ctor>(x1, null, x2, ..., xn);"
+                            else if init.DeclaringType has ctor(IteropStyle, JSObject) then
+                                "t.<ctor>(x1, null, js.Import(y));"
+                            else if init.DeclaringType has ctor(InteropStyle) then
+                                "t.<ctor>(x1, null);"
+                            else if init.DeclaringType.BaseType has ctor(InteropStyle) then
+                                "u.<ctor>(x1, null);"
+                            else if init.DeclaringType.BaseType has ctor() then
+                                "u.<ctor>(x1);"
+                            else
+                                ERROR in
+        let body = let s = Style(init.DeclaringType) in
+                   if s == 'Primitive' then
+                       "root.InheritProperties(x1, y);"
+                   else if s == 'Keyed' then
+                       "var k = t.Root.GetKeyField(y);
+                        if (k == null) {
+                            k = x1.Id;
+                            t.Root.SetKeyField(y, k);
+                        }
+                        t.Root.KeyToObject[k.toString()] = x1;
+                        x1.Unmanaged = y;
+                        importingCtor"
+                   else (* s == 'Proxied' *)
+                       "x1.Unmanaged = y;
+                        importingCtor" in
+        if init.DeclaringType.IsValueType then
+            if Style(init.DeclaringType) == 'Primitive' then
+                "function (x1, x2, ..., xn) {
+                     try {
+                         script(at1.Export(x1), at2.Export(x2), ..., atn.Export(xn));
+                     }
+                     catch (e) {
+                         throw root.ImportException(e);
+                     }
+                 }"
+            else
+                ERROR
+        else
+            "function (x1, x2, ..., xn) {
+                 var y;
+                 try {
+                     y = script(at2.Export(x2), ..., atn.Export(xn));
+                 }
+                 catch (e) {
+                     throw root.ImportException(e);
+                 }
+                 body
+             }"
+
+    IsExported(init : InstanceInitializer) : bool = init.IsExport && !init.IsExtern && !init.IsNotExported
+
+    (* XREF1123 *)
+    Export(init : InstanceInitializer) : Expression =
+        let n = <arity of init> in
+        let at1 = <type structure of init argument 1 type> in
+        ...
+        let atn = <type structure of init argument n type> in
+        let t = <type structure of init.DeclaringType> in
+        let body = if init.DeclaringType is a value type then
+                       "t.<ctor>(root.NewPointerToVariable(x1, t), at2.Import(x2), ..., atn.Import(xn))"
+                   else
+                       "t.<ctor>(x1, at2.Import(x2), ..., atn.Import(xn))" in
+        let script = ExportScript(init) in
+        "function() {
+             script(function(x2, ..., xn) {
+                        try {
+                            var x1 = t.I(t);
+                            body;
+                            return t.Export(x1);  // used declaring type, not type of first arg
+                        }
+                        catch(e) {
+                            throw root.ExportException(e);
+                        }
+                    });
+         }"
+
+    (*
+     * Properties
+     *)
+
+    IsImported(getter : PropertyGetter) : bool = getter.IsImport && getter.IsExtern || getter has Import attribute
+
+    Import(getter : PropertyGetter) : Expression = PrimImport(getter, ImportScript(getter))
+
+    IsImported(setter : PropertySetter) : bool = setter.IsImport && setter.IsExtern || setter has Import attribute
+
+    Import(setter : PropertySetter) : Expression = PrimImport(setter, ImportScript(setter))
+
+    IsExported(getter : PropertyGetter) : bool = getter.IsExport && !getter.IsExtern && !init.IsNotExported
+
+    Export(getter : PropertyGetter) : Expression = PrimExport(getter, ExportScript(getter))
+
+    IsExported(setter : PropertySetter) : bool = setter.IsExport && !setter.IsExtern && !init.IsNotExported
+
+    Export(setter : PropertySetter) : Expression = PrimExport(setter, ExportScript(setter))
+
+    (*
+     * Events
+     *)
+
+    IsImported(adder : EventAdder) : bool = adder.IsImport && adder.IsExtern || adder has Import attribute
+
+    (* XREF1129 *)
+    Import(adder : EventAdder) : Expression =
+        let t = <type structure for adder.DeclaringType> in
+        let dt = <type structure of event handler delegate type> in
+        let s = <event slot for adder.DeclaringEvent> in
+        let sl = if adder.IsStatic then
+                     <type structure for adder.DeclaringType>
+                 else
+                     "i" in
+        let eta = if adder.Import::SimulateMulticastEvents then
+                      "dt.Export(sl.s)"
+                  else
+                      "dt.Export(d)" in
+        let script = ImportScript(adder) in
+        let doadd = if adder.IsStatic then
+                        "script(eta)"
+                    else
+                        "script(t.ExportThis(i), eta)" in
+        let body = if adder.Import::SimulateMulticastEvents then
+                       "if (sl.s == null) {
+                            sl.s = d;
+                            try { doadd } catch(e) { throw root.ImportException(e); }
+                        }
+                        else
+                            sl.s = root.CombineDelegates(sl.s, d);"
+                   else
+                       "try { doadd } catch(e) { throw root.ImportException(e); }" in
+        if adder.IsStatic then
+            "function(d) { body }"
+        else
+            "function (i, d) { body }"
+
+    IsImported(remover : EventRemover) : bool = remover.IsImport && remover.IsExtern || remover has Import attribute
+
+    Import(remover : EventRemover) : Expression =
+        let t = <type structure for remover.DeclaringType> in
+        let dt = <type structure of event handler delegate type> in
+        let s = <event slot for remover.DeclaringEvent> in
+        let sl = if remover.IsStatic then
+                     <type structure for remover.DeclaringType>
+                 else
+                     "i" in
+        let eta = if remover.Import::SimulateMulticastEvents then
+                      "null"
+                  else
+                      "dt.Export(d)" in
+        let script = ImportScript(remover) in
+        let doremove = if remover.IsStatic then
+                           "script(eta)"
+                       else
+                           "script(<adder first arg type>.Export(i), eta)" in
+        let body = if remover.Import::SimulateMulticastEvents then
+                       "if (sl.s == null)
+                            throw root.InvalidOperationException();
+                        else {
+                            sl.s = root.RemoveAllDelegates(sl.s, d);
+                            if (sl.s == null) {
+                                try { doremove } catch (e) { throw root.ImportException(e); }
+                            }
+                        }"
+                   else
+                       "try { doremove } catch(e) { throw root.ImportException(e); }" in
+        if remover.IsStatic then
+            "function(d) { body }"
+        else
+            "function(i, d) { body }"
+
+    IsExported(adder : EventAdder) : bool = adder.IsExport && !adder.IsExtern && !init.IsNotExported
+
+    (* XREF1151 *)
+    Export(adder : EventAdder) : Expression =
+        let dt = <type structure for event handler delegate type> in
+        let t = <type structure for adder.DeclaringType> in
+        let s = <event slot for adder.DeclaringEvent> in
+        let sl = if adder.IsStatic then
+                     <type structure for adder.DeclaringType>
+                 else
+                     "i" in
+        let body = "var d = dt.Import(h);
+                    if (sl.s == null)
+                        sl.s = d;
+                    else
+                        sl.s = root.CombineDelegates(sl.s, d);" in
+        let script = ExportScript(adder) in
+        if adder.IsStatic then
+            "function() { script(function(h) { try { body } catch (e) { throw root.ExportException(e); } }); }"
+        else
+            "function(i) { script(<adder first arg type>.Export(i),
+                                  function(h) { try { body } catch (e) { throw root.ExportException(e); } });
+                         }"
+
+    IsExported(remover : EventRemover) : bool = remover.IsExport && !remover.IsExtern && !init.IsNotExported
+
+    Export(remover : EventRemover) : Expression =
+        let dt = <type structure for event handler delegate type> in
+        let t = <type structure for remover.DeclaringType> in
+        let s = <event slot for remover.DeclaringEvent> in
+        let sl = if remover.IsStatic then
+                     <type structure for remover.DeclaringType>
+                 else
+                     "i" in
+        let body = "var d = dt.Import(h);  // ok since import is idempotent
+                    if (sl.s == null)
+                        throw root.InvalidOperationException();
+                    else
+                        sl.s = root.RemoveAllDelegates(sl.s, d);" in
+        let script = ExportScript(remover) in
+        if remover.IsStatic then
+            "function() { script(function(h) { try { body } catch (e) { throw root.ExportException(e); }); }"
+        else
+            "function(i) { script(<removed first arg typ>.Export(i),
+                                  function(h) { try { body } catch (e) { throw root.ExportException(e); } });
+                         }"
+

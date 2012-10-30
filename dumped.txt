@@ -1,0 +1,146 @@
+function New-Generic {
+    param (
+        [string]$Type,
+        [Type[]]$TypeParams,
+        [object[]]$ConstructorParams
+    )
+    ## Create the generic type name
+    $TypeName = "$Type``$($TypeParams.Count)"
+    $OpenType = [Type]$TypeName
+    if (-not $OpenType) { throw "Could not find generic type $OpenType" }
+    ## Bind the type arguments to it
+    $ClosedType = $OpenType.MakeGenericType($TypeParams)
+    if (-not $ClosedType) { throw "Could not make closed type $TypeName" }
+    ## Create the closed version of the generic type
+    if ( $ConstructorParams ) {
+        ,[Activator]::CreateInstance($ClosedType, $ConstructorParams)
+    }
+    else {
+        ,[Activator]::CreateInstance($ClosedType)
+    }
+}
+
+function New-HashSet {
+    param (
+        [Type]$Type=[Object],
+        [object[]]$ConstructorParams
+
+    )
+    if ( $ConstructorParams -eq $null -and $Type -eq [String] ) {
+        $ConstructorParams = @([StringComparer]::OrdinalIgnoreCase)
+    }
+    New-Generic -Type System.Collections.Generic.HashSet -TypeParams $Type -ConstructorParams $ConstructorParams
+}
+
+
+
+
+
+#if DONT_TRUST_JAVASCRIPT_TIMER
+        private class ScheduledAction {
+            public DateTimeOffset When;
+            public Action What;
+        }
+
+        private List<ScheduledAction> scheduledActions;
+        private int currentTimerId;
+
+        public JavaScriptTimeoutScheduler()
+        {
+            scheduledActions = new List<ScheduledAction>();
+            currentTimerId = -1;
+        }
+
+        public DateTimeOffset Now
+        {
+            get { return DateTimeOffset.Now; }
+        }
+
+        public IDisposable Schedule(Action action)
+        {
+            return Schedule(action, TimeSpan.Zero);
+        }
+
+        public IDisposable Schedule(Action action, TimeSpan dueTime)
+        {
+            var now = DateTimeOffset.Now;
+            var due = now + dueTime;
+
+            var i = 0;
+            while (i < scheduledActions.Count)
+            {
+                if (due < scheduledActions[i].When)
+                    break;
+                i++;
+            }
+            scheduledActions.Insert(i, new ScheduledAction { When = now, What = action });
+            if (i == 0)
+            {
+                if (currentTimerId >= 0)
+                    Browser.Window.ClearTimeout(currentTimerId);
+                Sleep();
+            }
+
+            // TODO: Dispose
+            return Disposable.Create(() => { });
+        }
+
+        private void Timeout()
+        {
+            var now = DateTimeOffset.Now;
+            while (scheduledActions.Count > 0 && scheduledActions[0].When <= now)
+            {
+                scheduledActions[0].What();
+                scheduledActions.RemoveAt(0);
+            }
+            Sleep();
+        }
+
+        private void Sleep()
+        {
+            var now = DateTimeOffset.Now;
+            if (scheduledActions.Count > 0)
+            {
+                var delay = scheduledActions[0].When > now ? (int)((scheduledActions[0].When - now).TotalMilliseconds) : 0;
+                currentTimerId = Browser.Window.SetTimeout(Timeout, delay);
+            }
+        }
+#else
+
+
+
+
+                    var arguments =
+                        cie.Arguments.Select(e => TranslateExpression(methCompEnv, optBody, null, false, e)).ToSeq();
+                    var funcMethCompEnv = methCompEnv.EnterInlined(cie.CompEnv);
+                    var funcUsage = cie.Body.Usage(funcMethCompEnv);
+                    var funcBody = new Seq<JST.Statement>();
+                    EmitMethodPreamble(funcMethCompEnv, funcUsage, funcBody);
+                    foreach (var s in cie.Body.Body)
+                        TranslateStatement(funcMethCompEnv, funcBody, s);
+                    var func = new JST.FunctionExpression(funcMethCompEnv.ArgumentIds, funcBody);
+                    return new JST.CallExpression(func, arguments);
+
+
+        private void PrimAccumAllMembers(List<MemberInfo> acc)
+        {
+            var newInfos = new List<MemberInfo>();
+            foreach (var info in PrimAllLocalMembers())
+            {
+                var canAdd = true;
+                foreach (var existInfo in acc)
+                {
+                    if (existInfo.Match(info))
+                    {
+                        canAdd = false;
+                        break;
+                    }
+                }
+                if (canAdd)
+                    newInfos.Add(info);
+            }
+            foreach (var info in newInfos)
+                acc.Add(info);
+            if (BaseType != null)
+                BaseType.PrimAccumAllMembers(acc);
+        }

@@ -1,0 +1,118 @@
+﻿<Project ToolsVersion="3.5" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(SDRoot)\Source\LLDT.Before.Targets" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{CECB1710-6542-4A6B-95D8-4164519493DD}</ProjectGuid>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <OutputType>Library</OutputType>
+    <NoStandardLibraries>false</NoStandardLibraries>
+    <AssemblyName>CoreEx</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <SubPath>Redist\Desktop</SubPath>
+    <RootNamespace>Reactive</RootNamespace>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;CLSCOMPLIANT</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE;CLSCOMPLIANT</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System">
+      <Private>false</Private>
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(SDRoot)\References\Desktop\V2.0\System.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Core">
+      <Private>false</Private>
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(SDRoot)\References\Desktop\V3.5\System.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Windows.Forms">
+      <DesktopOnly>true</DesktopOnly>
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(SDRoot)\References\Desktop\V2.0\System.Windows.Forms.dll</HintPath>
+    </Reference>
+    <Reference Include="WindowsBase">
+      <Private>false</Private>
+      <DesktopOnly>true</DesktopOnly>
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(SDRoot)\References\Desktop\V3.0\WindowsBase.dll</HintPath>
+    </Reference>
+    <DesktopV4Reference Include="WindowsBase" />
+    <DesktopV4Reference Include="System.Windows.Forms" />
+    <SilverlightReference Include="System.Windows" />
+    <SilverlightReference Include="System.Windows.Browser" />
+    <NetCf37Reference Include="System.Windows" />
+    <NetCf37Reference Include="System.Windows.Browser" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSHARP.Targets" />
+  <Import Project="$(SDRoot)\Source\LLDT.After.Targets" />
+  <ProjectExtensions>
+    <VisualStudio AllowExistingFolder="true" />
+  </ProjectExtensions>
+  <ItemGroup>
+    <Compile Include="Action.cs" />
+    <Compile Include="AggregateException.cs" />
+    <Compile Include="Concurrency\NewThreadScheduler.cs" />
+    <Compile Include="Concurrency\SynchronizationContextScheduler.cs" />
+    <Compile Include="Concurrency\TaskPoolScheduler.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Disposables\AnonymousDisposable.cs" />
+    <Compile Include="Disposables\BooleanDisposable.cs" />
+    <Compile Include="Disposables\CancellationDisposable.cs" />
+    <Compile Include="Disposables\ContextDisposable.cs" />
+    <Compile Include="Disposables\DefaultDisposable.cs" />
+    <Compile Include="Disposables\Disposable.cs" />
+    <Compile Include="Disposables\CompositeDisposable.cs" />
+    <Compile Include="Disposables\RefCountDisposable.cs" />
+    <Compile Include="Disposables\MutableDisposable.cs" />
+    <Compile Include="Disposables\ScheduledDisposable.cs" />
+    <Compile Include="Exception.Extensions.cs" />
+    <Compile Include="Func.cs" />
+    <Compile Include="IObserver.Result.cs" />
+    <Compile Include="Notification.cs" />
+    <Compile Include="Semaphore.cs" />
+    <Compile Include="Concurrency\AsyncLock.cs" />
+    <Compile Include="Concurrency\ControlScheduler.cs" />
+    <Compile Include="Concurrency\DispatcherScheduler.cs" />
+    <Compile Include="Concurrency\ImmediateScheduler.cs" />
+    <Compile Include="Concurrency\IScheduler.cs" />
+    <Compile Include="Concurrency\ThreadPoolScheduler.cs" />
+    <Compile Include="Concurrency\CurrentThreadScheduler.cs" />
+    <Compile Include="Concurrency\Scheduler.cs" />
+    <Compile Include="TimeInterval.cs" />
+    <Compile Include="TimeStamped.cs" />
+    <Compile Include="Unit.cs" />
+    <Compile Include="Event.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\System.Observable\System.Observable.csproj">
+      <Project>{6C58BED8-8604-4FDF-BAAD-5C3C975ADBA6}</Project>
+      <TargetFrameworks>DesktopClr20,Silverlight,NetCf37</TargetFrameworks>
+      <Name>System.Observable</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\System.Threading\System.Threading.csproj">
+      <Project>{2A463822-70A5-4095-A3DF-96CA4EACE93F}</Project>
+      <Name>System.Threading</Name>
+      <TargetFrameworks>DesktopClr20</TargetFrameworks>
+    </ProjectReference>
+  </ItemGroup>
+</Project>

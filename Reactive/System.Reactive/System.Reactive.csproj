@@ -1,0 +1,146 @@
+﻿<Project ToolsVersion="3.5" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(SDRoot)\Source\LLDT.Before.Targets" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{DC2DC484-1B78-4ED4-8893-5E0457825756}</ProjectGuid>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <OutputType>Library</OutputType>
+    <NoStandardLibraries>false</NoStandardLibraries>
+    <AssemblyName>Reactive</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <SubPath>Redist\Desktop</SubPath>
+    <RootNamespace>Reactive</RootNamespace>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;CLSCOMPLIANT</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE;CLSCOMPLIANT</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="AbstractObserver.cs" />
+    <Compile Include="AnonymousEnumerable.cs" />
+    <Compile Include="AnonymousObservable.cs" />
+    <Compile Include="AnonymousObserver.cs" />
+    <Compile Include="AsyncSubject.cs" />
+    <Compile Include="BehaviorSubject.cs" />
+    <Compile Include="BinaryObserver.cs" />
+    <Compile Include="ConnectableObservable.cs" />
+    <Compile Include="ControlSynchronizationContext.cs" />
+    <Compile Include="Either.Generic.cs" />
+    <Compile Include="IConnectableObservable.cs" />
+    <Compile Include="ISubject.cs" />
+    <Compile Include="ISubject.Multi.cs" />
+    <Compile Include="Joins\ActivePlan.cs" />
+    <Compile Include="Joins\JoinObserver.cs" />
+    <Compile Include="Joins\Pattern.cs" />
+    <Compile Include="Joins\Plan.cs" />
+    <Compile Include="Notification.Extensions.cs" />
+    <Compile Include="Observable.Aggregates.cs" />
+    <Compile Include="Observable.Asynchronous.cs" />
+    <Compile Include="Observable.Binding.cs" />
+    <Compile Include="Observable.Blocking.cs" />
+    <Compile Include="Observable.Concurrency.cs" />
+    <Compile Include="Observable.Creation.cs" />
+    <Compile Include="Observable.Extensions.cs" />
+    <Compile Include="Observable.Joins.cs" />
+    <Compile Include="Observable.Multiple.cs" />
+    <Compile Include="Observable.Remoting.cs" />
+    <Compile Include="Observable.Single.cs" />
+    <Compile Include="Observable.StandardSequenceOperators.cs" />
+    <Compile Include="Observable.Time.cs" />
+    <Compile Include="Observer.Extensions.cs" />
+    <Compile Include="PushPullAdapter.cs" />
+    <Compile Include="ReplaySubject.cs" />
+    <Compile Include="Subject.cs" />
+    <Compile Include="SynchronizedObserver.cs" />
+    <Compile Include="IGroupedObservable.cs" />
+    <Compile Include="GroupedObservable.cs" />
+    <Compile Include="DispatcherObservableExtensions.cs" />
+    <Compile Include="TaskObservableExtensions.cs" />
+    <Compile Include="ControlObservableExtensions.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Accessibility, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <DesktopOnly>true</DesktopOnly>
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Windows\Microsoft.NET\Framework\v2.0.50727\Accessibility.dll</HintPath>
+    </Reference>
+    <Reference Include="System">
+      <Private>false</Private>
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(SDRoot)\References\Desktop\V2.0\System.dll</HintPath>
+    </Reference>
+    <Reference Include="System.configuration, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <DesktopOnly>true</DesktopOnly>
+      <HintPath>C:\Windows\Microsoft.NET\Framework\v2.0.50727\System.configuration.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Core">
+      <Private>false</Private>
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(SDRoot)\References\Desktop\V3.5\System.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <DesktopOnly>true</DesktopOnly>
+      <HintPath>C:\Windows\Microsoft.NET\Framework\v2.0.50727\System.Drawing.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Windows.Forms">
+      <DesktopOnly>true</DesktopOnly>
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(SDRoot)\References\Desktop\V2.0\System.Windows.Forms.dll</HintPath>
+    </Reference>
+    <Reference Include="WindowsBase">
+      <Private>false</Private>
+      <DesktopOnly>true</DesktopOnly>
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(SDRoot)\References\Desktop\V3.0\WindowsBase.dll</HintPath>
+    </Reference>
+    <DesktopV4Reference Include="WindowsBase" />
+    <DesktopV4Reference Include="System.Windows.Forms" />
+    <DesktopV4Reference Include="Accessibility" />
+    <DesktopV4Reference Include="System.configuration" />
+    <DesktopV4Reference Include="System.Drawing" />
+    <DesktopV4Reference Include="System.Xaml" />
+    <SilverlightReference Include="System.Windows" />
+    <SilverlightReference Include="System.Windows.Browser" />
+    <NetCf37Reference Include="System.Windows" />
+    <NetCf37Reference Include="System.Windows.Browser" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSHARP.Targets" />
+  <Import Project="$(SDRoot)\Source\LLDT.After.Targets" />
+  <ProjectExtensions>
+    <VisualStudio AllowExistingFolder="true" />
+  </ProjectExtensions>
+  <ItemGroup>
+    <ProjectReference Include="..\System.Observable\System.Observable.csproj">
+      <Project>{6c58bed8-8604-4fdf-baad-5c3c975adba6}</Project>
+      <TargetFrameworks>DesktopClr20,Silverlight,NetCf37</TargetFrameworks>
+      <Name>System.Observable</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\System.CoreEx\System.CoreEx.csproj">
+      <Project>{CECB1710-6542-4A6B-95D8-4164519493DD}</Project>
+      <Name>System.CoreEx</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\System.Threading\System.Threading.csproj">
+      <Project>{2A463822-70A5-4095-A3DF-96CA4EACE93F}</Project>
+      <Name>System.Threading</Name>
+      <TargetFrameworks>DesktopClr20</TargetFrameworks>
+    </ProjectReference>
+  </ItemGroup>
+</Project>

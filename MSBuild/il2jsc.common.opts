@@ -1,0 +1,25 @@
+@$IL2JSROOT\MSBuild\il2jsc.nowarns.opts
+-assemblyNameResolution name
+-rename mscorlib IL2JS_mscorlib
+-rename IL2JS_JSTypes_silverlight IL2JS_mscorlib
+-rename IL2JS_SilverlightInterop ""
+-rename System.Xml ""
+-rename System.Windows.Browser ""
+-rename System.ServiceModel.Web ""
+-rename System.Runtime.Serialization ""
+-rename System.Core IL2JS_System.Core
+-rename System IL2JS_System
+-rename System.Windows IL2JS_System.Windows
+-rename System.Net IL2JS_System.Net
+-rename System.CoreEx IL2JS_System.CoreEx
+-augment "$IL2JSROOT\bin\IL2JS_mscorlib.dll"
+-augment "$IL2JSROOT\bin\IL2JS_System.Core.dll"
+-original System.Core
+-augment "$IL2JSROOT\bin\IL2JS_System.dll"
+-original System
+-augment "$IL2JSROOT\bin\IL2JS_System.Windows.dll"
+-original System.Windows
+-augment "$IL2JSROOT\bin\IL2JS_System.Net.dll"
+-original System.Net
+-augment "$IL2JSROOT\bin\IL2JS_System.CoreEx.dll"
+-original System.CoreEx

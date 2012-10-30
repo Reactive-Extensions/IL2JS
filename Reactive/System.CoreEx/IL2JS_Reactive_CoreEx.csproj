@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">Plain</Platform>
+    <ProductVersion>8.0.50727</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{CECB1710-6542-4A6B-95D8-4164519493DD}</ProjectGuid>
+    <ProjectTypeGuids>{A1591282-1198-4647-A2B1-27E5FF5F6F3B};{fae04ec0-301f-11d3-bf4b-00c04f79efbc}</ProjectTypeGuids>
+    <OutputType>Library</OutputType>
+    <RootNamespace>
+    </RootNamespace>
+    <AssemblyName>IL2JS_CoreEx</AssemblyName>
+    <TargetFrameworkIdentifier>Silverlight</TargetFrameworkIdentifier>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <SilverlightVersion>$(TargetFrameworkVersion)</SilverlightVersion>
+    <SilverlightApplication>false</SilverlightApplication>
+    <ValidateXaml>true</ValidateXaml>
+    <ThrowErrorsInValidation>true</ThrowErrorsInValidation>
+    <IL2JSROOT Condition=" '$(IL2JSROOT)' == '' ">$(Registry:HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\IL2JS@Root)</IL2JSROOT>
+    <IL2JSROOT Condition=" '$(IL2JSROOT)' == '' ">$(Registry:HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\IL2JS@Root)</IL2JSROOT>
+  </PropertyGroup>
+  <!-- This property group is only here to support building this project using the 
+       MSBuild 3.5 toolset. In order to work correctly with this older toolset, it needs 
+       to set the TargetFrameworkVersion to v3.5 -->
+  <PropertyGroup Condition="'$(MSBuildToolsVersion)' == '3.5'">
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|Plain' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>$(IL2JSROOT)\bin</OutputPath>
+    <DefineConstants>TRACE;DEBUG;CLSCOMPLIANT;SILVERLIGHT;IL2JS</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|Collecting' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>$(IL2JSROOT)\bin</OutputPath>
+    <DefineConstants>TRACE;DEBUG;CLSCOMPLIANT;SILVERLIGHT;IL2JS</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|Traced' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>$(IL2JSROOT)\bin</OutputPath>
+    <DefineConstants>TRACE;DEBUG;CLSCOMPLIANT;SILVERLIGHT;IL2JS</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|Plain' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>$(IL2JSROOT)\bin</OutputPath>
+    <DefineConstants>TRACE;CLSCOMPLIANT;SILVERLIGHT;IL2JS</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|Collecting' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>$(IL2JSROOT)\bin</OutputPath>
+    <DefineConstants>TRACE;CLSCOMPLIANT;SILVERLIGHT;IL2JS</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|Traced' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>$(IL2JSROOT)\bin</OutputPath>
+    <DefineConstants>TRACE;CLSCOMPLIANT;SILVERLIGHT;IL2JS</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="system" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Net" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.ServiceModel.Web" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Action.cs" />
+    <Compile Include="AggregateException.cs" />
+    <Compile Include="Concurrency\JavaScriptTimeoutScheduler.cs" />
+    <Compile Include="Concurrency\NewThreadScheduler.cs" />
+    <Compile Include="Concurrency\SynchronizationContextScheduler.cs" />
+    <Compile Include="Concurrency\TaskPoolScheduler.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Disposables\AnonymousDisposable.cs" />
+    <Compile Include="Disposables\BooleanDisposable.cs" />
+    <Compile Include="Disposables\CancellationDisposable.cs" />
+    <Compile Include="Disposables\ContextDisposable.cs" />
+    <Compile Include="Disposables\DefaultDisposable.cs" />
+    <Compile Include="Disposables\Disposable.cs" />
+    <Compile Include="Disposables\CompositeDisposable.cs" />
+    <Compile Include="Disposables\RefCountDisposable.cs" />
+    <Compile Include="Disposables\MutableDisposable.cs" />
+    <Compile Include="Disposables\ScheduledDisposable.cs" />
+    <Compile Include="Exception.Extensions.cs" />
+    <Compile Include="Func.cs" />
+    <Compile Include="IObserver.Result.cs" />
+    <Compile Include="Notification.cs" />
+    <Compile Include="Semaphore.cs" />
+    <Compile Include="Concurrency\AsyncLock.cs" />
+    <Compile Include="Concurrency\ControlScheduler.cs" />
+    <Compile Include="Concurrency\DispatcherScheduler.cs" />
+    <Compile Include="Concurrency\ImmediateScheduler.cs" />
+    <Compile Include="Concurrency\IScheduler.cs" />
+    <Compile Include="Concurrency\ThreadPoolScheduler.cs" />
+    <Compile Include="Concurrency\CurrentThreadScheduler.cs" />
+    <Compile Include="Concurrency\Scheduler.cs" />
+    <Compile Include="TimeInterval.cs" />
+    <Compile Include="TimeStamped.cs" />
+    <Compile Include="Unit.cs" />
+    <Compile Include="Event.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="$(IL2JSROOT)\Html\IL2JS_Html.csproj">
+      <Project>{8E912806-310E-47F2-8538-2833165F9DA7}</Project>
+      <Name>IL2JS_Html</Name>
+    </ProjectReference>
+    <ProjectReference Include="$(IL2JSROOT)\JSTypes\IL2JS_JSTypes_silverlight.csproj">
+      <Project>{A831B585-1833-4EED-BD51-335D39AF87CC}</Project>
+      <Name>IL2JS_JSTypes_silverlight</Name>
+    </ProjectReference>
+    <ProjectReference Include="$(IL2JSROOT)\SilverlightInterop\IL2JS_SilverlightInterop.csproj">
+      <Project>{7685B8C6-19CF-411B-AFF4-A8699D0ECA3A}</Project>
+      <Name>IL2JS_SilverlightInterop</Name>
+    </ProjectReference>
+    <ProjectReference Include="$(IL2JSROOT)\Reactive\System.Observable\IL2JS_Reactive_Observable.csproj">
+      <Project>{6C58BED8-8604-4FDF-BAAD-5C3C975ADBA6}</Project>
+      <Name>IL2JS_Reactive_Observable</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSHARP.Targets" />
+  <Import Project="$(IL2JSROOT)\MSBuild\Microsoft.LiveLabs.JavaScript.IL2JS.targets" />
+  <ProjectExtensions>
+    <VisualStudio AllowExistingFolder="true">
+      <FlavorProperties GUID="{A1591282-1198-4647-A2B1-27E5FF5F6F3B}">
+        <SilverlightProjectProperties />
+      </FlavorProperties>
+    </VisualStudio>
+  </ProjectExtensions>
+</Project>

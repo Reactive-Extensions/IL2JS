@@ -1,0 +1,347 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">Plain</Platform>
+    <ProductVersion>8.0.50727</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{DE0FAF1B-646B-4A06-9D19-9A0FA46453F3}</ProjectGuid>
+    <ProjectTypeGuids>{A1591282-1198-4647-A2B1-27E5FF5F6F3B};{fae04ec0-301f-11d3-bf4b-00c04f79efbc}</ProjectTypeGuids>
+    <OutputType>Library</OutputType>
+    <RootNamespace>
+    </RootNamespace>
+    <AssemblyName>IL2JS_mscorlib</AssemblyName>
+    <TargetFrameworkIdentifier>Silverlight</TargetFrameworkIdentifier>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <SilverlightVersion>$(TargetFrameworkVersion)</SilverlightVersion>
+    <SilverlightApplication>false</SilverlightApplication>
+    <ValidateXaml>true</ValidateXaml>
+    <ThrowErrorsInValidation>true</ThrowErrorsInValidation>
+    <NoWarn>0824; 0169; 0649; 0626; 0444; 0414</NoWarn>
+    <NoStandardLibraries>false</NoStandardLibraries>
+    <NoStdLib>true</NoStdLib>
+    <IL2JSROOT Condition=" '$(IL2JSROOT)' == '' ">$(Registry:HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\IL2JS@Root)</IL2JSROOT>
+    <IL2JSROOT Condition=" '$(IL2JSROOT)' == '' ">$(Registry:HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\IL2JS@Root)</IL2JSROOT>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|Plain' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>$(IL2JSROOT)\bin</OutputPath>
+    <DefineConstants>TRACE;DEBUG;IL2JS</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|Collecting' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>$(IL2JSROOT)\bin</OutputPath>
+    <DefineConstants>TRACE;DEBUG;IL2JS</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|Traced' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>$(IL2JSROOT)\bin</OutputPath>
+    <DefineConstants>TRACE;DEBUG;IL2JS</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|Plain' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>$(IL2JSROOT)\bin</OutputPath>
+    <DefineConstants>TRACE;IL2JS</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|Collecting' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>$(IL2JSROOT)\bin</OutputPath>
+    <DefineConstants>TRACE;IL2JS</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|Traced' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>$(IL2JSROOT)\bin</OutputPath>
+    <DefineConstants>TRACE;IL2JS</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\IL2JS\BreakAttribute.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\IL2JS\ReflectionAttribute.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\IL2JS\ReflectionLevel.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\IL2JS\UsedTypeAttribute.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\IL2JS\NoInteropAttribute.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\IL2JS\InlineAttribute.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\IL2JS\InteropGeneratedAttribute.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\IL2JS\EntryPointAttribute.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\IL2JS\IgnoreAttribute.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\IL2JS\UsedAttribute.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\Interop\Casing.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\IL2JS\RuntimeAttribute.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\Interop\Creation.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\Interop\ExportAttribute.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\Interop\ImportAttribute.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\Interop\ImportKeyAttribute.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\Interop\InstanceState.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\Interop\InteropAttribute.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\Interop\NamingAttribute.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\Interop\NotExportedAttribute.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\Interop\Qualification.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\JSArguments.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\JSArray.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\JSArray`1.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\Interop\JSContext.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\JSDate.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\JSError.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\JSEvalError.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\Interop\JSException.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\JSFunction.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\JSGlobals.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\JSMatchResults.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\JSMath.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\JSNumber.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\JSObject.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\JSProperty.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\JSRangeError.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\JSReferenceError.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\JSRegExp.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\JSString.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\JSSyntaxError.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\JSTypeError.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\JSURIError.cs" />
+    <Compile Include="System\Action`8.cs" />
+    <Compile Include="System\Collections\ObjectModel\Collection.cs" />
+    <Compile Include="System\Convert.cs" />
+    <Compile Include="System\DelegateAsyncResult.cs" />
+    <Compile Include="System\Globalization\CultureInfo.cs" />
+    <Compile Include="System\Guid.cs" />
+    <Compile Include="System\IFormatProvider.cs" />
+    <Compile Include="System\IO\BinaryReader.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="System\IO\BinaryWriter.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="System\IO\Interop\JScriptStream.cs" />
+    <Compile Include="System\IO\MemoryStream.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="System\IO\SeekOrigin.cs" />
+    <Compile Include="System\IO\Stream.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="System\IO\StreamReader.cs" />
+    <Compile Include="System\IO\StreamWriter.cs" />
+    <Compile Include="System\IO\TextReader.cs" />
+    <Compile Include="System\IO\TextWriter.cs" />
+    <Compile Include="System\Reflection\NonTypeMemberBase.cs" />
+    <Compile Include="System\Resources\ResourceManager.cs" />
+    <Compile Include="System\Text\Encoding.cs" />
+    <Compile Include="System\Threading\AutoResetEvent.cs" />
+    <Compile Include="System\Threading\EventResetMode.cs" />
+    <Compile Include="System\Threading\EventWaitHandle.cs" />
+    <Compile Include="System\Threading\ManualResetEvent.cs" />
+    <Compile Include="System\Threading\RegisteredWaitHandle.cs" />
+    <Compile Include="System\Threading\ThreadPool.cs" />
+    <Compile Include="System\Threading\Timer.cs" />
+    <Compile Include="System\Threading\TimerCallback.cs" />
+    <Compile Include="System\Threading\WaitCallback.cs" />
+    <Compile Include="System\Threading\WaitHandle.cs" />
+    <Compile Include="System\ObjectDisposedException.cs" />
+    <Compile Include="System\Action.cs" />
+    <Compile Include="System\Action`1.cs" />
+    <Compile Include="System\Action`5.cs" />
+    <Compile Include="System\Action`6.cs" />
+    <Compile Include="System\Action`7.cs" />
+    <Compile Include="System\Activator.cs" />
+    <Compile Include="System\ArgumentException.cs" />
+    <Compile Include="System\ArgumentNullException.cs" />
+    <Compile Include="System\ArgumentOutOfRangeException.cs" />
+    <Compile Include="System\ArithmeticException.cs" />
+    <Compile Include="System\Array.cs" />
+    <Compile Include="System\ArrayTypeMismatchException.cs" />
+    <Compile Include="System\AsyncCallback.cs" />
+    <Compile Include="System\Attribute.cs" />
+    <Compile Include="System\AttributeTargets.cs" />
+    <Compile Include="System\AttributeUsageAttribute.cs" />
+    <Compile Include="System\Boolean.cs" />
+    <Compile Include="System\Byte.cs" />
+    <Compile Include="System\Char.cs" />
+    <Compile Include="System\CharEnumerator.cs" />
+    <Compile Include="System\Collections\BitArray.cs" />
+    <Compile Include="System\Collections\Comparer.cs" />
+    <Compile Include="System\Collections\DictionaryEntry.cs" />
+    <Compile Include="System\Collections\Generic\Comparer`1.cs" />
+    <Compile Include="System\Collections\Generic\Dictionary`2.cs" />
+    <Compile Include="System\Collections\Generic\EqualityComparer`1.cs" />
+    <Compile Include="System\Collections\Generic\GenericComparer`1.cs" />
+    <Compile Include="System\Collections\Generic\ICollection`1.cs" />
+    <Compile Include="System\Collections\Generic\IComparer`1.cs" />
+    <Compile Include="System\Collections\Generic\IDictionary`2.cs" />
+    <Compile Include="System\Collections\Generic\IEnumerable`1.cs" />
+    <Compile Include="System\Collections\Generic\IEnumerator`1.cs" />
+    <Compile Include="System\Collections\Generic\IEqualityComparer`1.cs" />
+    <Compile Include="System\Collections\Generic\IList`1.cs" />
+    <Compile Include="System\Collections\Generic\KeyNotFoundException.cs" />
+    <Compile Include="System\Collections\Generic\KeyValuePair`2.cs" />
+    <Compile Include="System\Collections\Generic\List`1.cs" />
+    <Compile Include="System\Collections\Generic\NullableComparer`1.cs" />
+    <Compile Include="System\Collections\Generic\ObjectComparer`1.cs" />
+    <Compile Include="System\Collections\HashHelpers.cs" />
+    <Compile Include="System\Collections\ICollection.cs" />
+    <Compile Include="System\Collections\IComparer.cs" />
+    <Compile Include="System\Collections\IDictionary.cs" />
+    <Compile Include="System\Collections\IDictionaryEnumerator.cs" />
+    <Compile Include="System\Collections\IEnumerable.cs" />
+    <Compile Include="System\Collections\IEnumerator.cs" />
+    <Compile Include="System\Collections\IEqualityComparer.cs" />
+    <Compile Include="System\Collections\IList.cs" />
+    <Compile Include="System\Collections\ObjectModel\ReadOnlyCollection`1.cs" />
+    <Compile Include="System\Collections\Stack.cs" />
+    <Compile Include="System\Comparison`1.cs" />
+    <Compile Include="System\Console.cs" />
+    <Compile Include="System\Converter`2.cs" />
+    <Compile Include="System\DateTimeOffset.cs" />
+    <Compile Include="System\Func`9.cs" />
+    <Compile Include="System\Func`8.cs" />
+    <Compile Include="System\Func`7.cs" />
+    <Compile Include="System\DBNull.cs" />
+    <Compile Include="System\DllNotFoundException.cs" />
+    <Compile Include="System\Func`6.cs" />
+    <Compile Include="System\GC.cs" />
+    <Compile Include="System\IntPtr.cs" />
+    <Compile Include="System\MemberAccessException.cs" />
+    <Compile Include="System\Reflection\AssemblyCultureAttribute.cs" />
+    <Compile Include="System\Reflection\AssemblyVersionAttribute.cs" />
+    <Compile Include="System\Reflection\BindingFlags.cs" />
+    <Compile Include="System\Reflection\DefaultMemberAttribute.cs" />
+    <Compile Include="System\Reflection\ParameterAttributes.cs" />
+    <Compile Include="System\CtorDelegate.cs" />
+    <Compile Include="System\DateTime.cs" />
+    <Compile Include="System\DateTimeKind.cs" />
+    <Compile Include="System\DayOfWeek.cs" />
+    <Compile Include="System\Decimal.cs" />
+    <Compile Include="System\Delegate.cs" />
+    <Compile Include="System\Diagnostics\Debugger.cs" />
+    <Compile Include="System\DivideByZeroException.cs" />
+    <Compile Include="System\Double.cs" />
+    <Compile Include="System\EntryPointNotFoundException.cs" />
+    <Compile Include="System\Enum.cs" />
+    <Compile Include="System\Environment.cs" />
+    <Compile Include="System\EventArgs.cs" />
+    <Compile Include="System\EventHandler.cs" />
+    <Compile Include="System\EventHandler`1.cs" />
+    <Compile Include="System\Exception.cs" />
+    <Compile Include="System\ExecutionEngineException.cs" />
+    <Compile Include="System\FlagsAttribute.cs" />
+    <Compile Include="System\FormatException.cs" />
+    <Compile Include="System\IAsyncResult.cs" />
+    <Compile Include="System\ICloneable.cs" />
+    <Compile Include="System\IComparable.cs" />
+    <Compile Include="System\IComparable`1.cs" />
+    <Compile Include="System\IDisposable.cs" />
+    <Compile Include="System\IEquatable`1.cs" />
+    <Compile Include="System\IndexOutOfRangeException.cs" />
+    <Compile Include="System\InsufficientMemoryException.cs" />
+    <Compile Include="System\Int16.cs" />
+    <Compile Include="System\Int32.cs" />
+    <Compile Include="System\Int64.cs" />
+    <Compile Include="System\InvalidCastException.cs" />
+    <Compile Include="System\InvalidOperationException.cs" />
+    <Compile Include="System\LogLevel.cs" />
+    <Compile Include="System\Math.cs" />
+    <Compile Include="System\MidpointRounding.cs" />
+    <Compile Include="System\MissingFieldException.cs" />
+    <Compile Include="System\MissingMemberException.cs" />
+    <Compile Include="System\MissingMethodException.cs" />
+    <Compile Include="System\MulticastDelegate.cs" />
+    <Compile Include="System\NotFiniteNumberException.cs" />
+    <Compile Include="System\NotImplementedException.cs" />
+    <Compile Include="System\NotSupportedException.cs" />
+    <Compile Include="System\Nullable.cs" />
+    <Compile Include="System\Nullable`1.cs" />
+    <Compile Include="System\NullReferenceException.cs" />
+    <Compile Include="System\Object.cs" />
+    <Compile Include="System\OperationCanceledException.cs" />
+    <Compile Include="System\OutOfMemoryException.cs" />
+    <Compile Include="System\OverflowException.cs" />
+    <Compile Include="System\ParamArrayAttribute.cs" />
+    <Compile Include="System\Predicate`1.cs" />
+    <Compile Include="System\Random.cs" />
+    <Compile Include="System\Reflection\AmbiguousMatchException.cs" />
+    <Compile Include="System\Reflection\Assembly.cs" />
+    <Compile Include="System\Reflection\AssemblyName.cs" />
+    <Compile Include="System\Reflection\ConstructorInfo.cs" />
+    <Compile Include="System\Reflection\EventInfo.cs" />
+    <Compile Include="System\Reflection\FieldInfo.cs" />
+    <Compile Include="System\Reflection\MemberInfo.cs" />
+    <Compile Include="System\Reflection\MemberTypes.cs" />
+    <Compile Include="System\Reflection\MethodBase.cs" />
+    <Compile Include="System\Reflection\MethodInfo.cs" />
+    <Compile Include="System\Reflection\ParameterInfo.cs" />
+    <Compile Include="System\Reflection\PropertyInfo.cs" />
+    <Compile Include="System\Reflection\TargetException.cs" />
+    <Compile Include="System\Reflection\TargetInvocationException.cs" />
+    <Compile Include="System\Reflection\TargetParameterCountException.cs" />
+    <Compile Include="System\RuntimeFieldHandle.cs" />
+    <Compile Include="System\RuntimeMethodHandle.cs" />
+    <Compile Include="System\RuntimeTypeHandle.cs" />
+    <Compile Include="System\Runtime\CompilerServices\CompilerGeneratedAttribute.cs" />
+    <Compile Include="System\Runtime\CompilerServices\IndexerNameAttribute.cs" />
+    <Compile Include="System\Runtime\CompilerServices\RuntimeHelpers.cs" />
+    <Compile Include="System\Runtime\InteropServices\DllImportAttribute.cs" />
+    <Compile Include="System\Runtime\InteropServices\OutAttribute.cs" />
+    <Compile Include="System\Runtime\Versioning\TargetFrameworkAttribute.cs" />
+    <Compile Include="System\SByte.cs" />
+    <Compile Include="System\Single.cs" />
+    <Compile Include="System\StackOverflowException.cs" />
+    <Compile Include="System\String.cs" />
+    <Compile Include="System\StringComparison.cs" />
+    <Compile Include="System\StringSplitOptions.cs" />
+    <Compile Include="System\SystemException.cs" />
+    <Compile Include="System\Text\StringBuilder.cs" />
+    <Compile Include="System\Threading\Interlocked.cs" />
+    <Compile Include="System\Threading\Monitor.cs" />
+    <Compile Include="System\Threading\Thread.cs" />
+    <Compile Include="System\Threading\WaitOrTimerCallback.cs" />
+    <Compile Include="System\TimeoutException.cs" />
+    <Compile Include="System\TimeSpan.cs" />
+    <Compile Include="System\Type.cs" />
+    <Compile Include="System\TypeCode.cs" />
+    <Compile Include="System\TypeLoadException.cs" />
+    <Compile Include="System\UInt16.cs" />
+    <Compile Include="System\UInt32.cs" />
+    <Compile Include="System\UInt64.cs" />
+    <Compile Include="System\UIntPtr.cs" />
+    <Compile Include="System\ValueType.cs" />
+    <Compile Include="System\Version.cs" />
+    <Compile Include="System\Void.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Redist.snk" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSHARP.Targets" />
+  <ProjectExtensions>
+    <VisualStudio>
+      <FlavorProperties GUID="{A1591282-1198-4647-A2B1-27E5FF5F6F3B}">
+        <SilverlightProjectProperties />
+      </FlavorProperties>
+    </VisualStudio>
+  </ProjectExtensions>
+</Project>

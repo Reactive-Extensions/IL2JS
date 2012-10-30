@@ -1,0 +1,226 @@
+﻿ //
+// ECMA-262 Grammar
+//
+
+// VERSION 2: Simplified
+
+// ----------------------------------------------------------------------
+// Lexical Grammar
+// ----------------------------------------------------------------------
+
+// Source is sequence of unicode characters in UTF-16 encoding normalised to form C ("canonical composition")
+SourceCharacter ::= <any Unicode character>
+InputElementDiv ::= WhiteSpace | LineTerminator| Comment | Token | DivPunctuator
+InputElementRegExp ::= WhiteSpace | LineTerminator | Comment | Token | RegularExpressionLiteral
+WhiteSpace ::= <TAB> | <VT> | <FF> | <SP> | <NBSP> | <USP>
+LineTerminator ::= <LF> | <CR> | <LS> | <PS>
+Comment ::= MultiLineComment | SingleLineComment
+MultiLineComment ::= "/*" MultiLineCommentChars? "*/"
+MultiLineCommentChars ::= MultiLineNotAsteriskChar MultiLineCommentChars? | "*" PostAsteriskCommentChars?
+PostAsteriskCommentChars ::= MultiLineNotForwardSlashOrAsteriskChar MultiLineCommentChars? | "*" PostAsteriskCommentChars?
+MultiLineNotAsteriskChar ::= SourceCharacter - "*"
+MultiLineNotForwardSlashOrAsteriskChar ::= SourceCharacter - ("/" | "*")
+SingleLineComment ::= "//" SingleLineCommentChars?
+SingleLineCommentChars ::= SingleLineCommentChar SingleLineCommentChars?
+SingleLineCommentChar ::= SourceCharacter - LineTerminator
+
+Token ::= ReservedWord | Identifier | Punctuator | NumericLiteral | StringLiteral
+ReservedWord ::= Keyword | FutureReservedWord | NullLiteral | BooleanLiteral
+Keyword ::= "break" | "else" | "new" | "var" | "case" | "finally" | "return" | "void" | "catch" | "for" | "switch" | "while" | "continue" | "function" | "this" | "with" | "default" | "if" | "throw" | "delete" | "in" | "try" | "do" | "instanceof" | "typeof"
+FutureReservedWord ::= "abstract" | "enum" | "int" | "short" | "boolean" | "export" | "interface" | "static" | "byte" | "extends" | "long" | "super" | "char" | "final" | "native" | "synchronized" | "class" | "float" | "package" | "throws" | "const" | "goto" | "private" | "transient" | "debugger" | "implements" | "protected" | "volatile" | "double" | "import" | "public"
+Identifier ::= IdentifierName - ReservedWord
+IdentifierName ::= IdentifierStart IdentifierPart*
+IdentifierStart ::= UnicodeLetter | "$" | "_" | UnicodeEscapeSequence
+IdentifierPart ::= IdentifierStart | UnicodeCombiningMarkDigitPunctuation
+UnicodeLetter ::= <any character in the Unicode categories "Uppercase letter (Lu)", "Lowercase letter (Ll)", "Titlecase letter (Lt)", "Modifier letter (Lm)", "Other letter (Lo)", or "Letter number (Nl)">
+UnicodeCombiningMarkDigitPunctuation ::= <any character in the Unicode categories "Non-spacing mark (Mn)", "Combining spacing mark (Mc)", "Decimal number (Nd)", or "Connector punctuation (Pc)">
+UnicodeEscapeSequence ::= "\\u" HexDigit HexDigit HexDigit HexDigit
+HexDigit ::= "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" | "a" | "b" | "c" | "d" | "e" | "f" | "A" | "B" | "C" | "D" | "E" | "F"
+Punctuator ::= "{" | "}" | "(" | ")" | "[" | "]" | "." | ";" | "," | "<" | ">" | "<=" | ">=" | "==" | "!=" | "===" | "!==" | "+" | "-" | "*" | "%" | "++" | "--" | "<<" | ">>" | ">>>" | "&" | "|" | "^" | "!" | "~" | "&&" | "||" | "?" | ":" | "=" | "+=" | "-=" | "*=" | "%=" | "<<=" | ">>=" | ">>>=" | "&=" | "|=" | "^="
+DivPunctuator ::= "/" | "/="
+// RegularExpressionLiteral is implied
+Literal ::= NullLiteral | BooleanLiteral | NumericLiteral | StringLiteral | RegularExpressionLiteral
+NullLiteral ::= "null"
+BooleanLiteral ::= "true" | "false"
+
+NumericLiteral ::= (DecimalLiteral | HexIntegerLiteral) <not followed by DecimalDigit or IdentifierStart>
+DecimalLiteral ::= DecimalIntegerLiteral "." DecimalDigits? ExponentPart? | "." DecimalDigits ExponentPart? | DecimalIntegerLiteral ExponentPart?
+DecimalIntegerLiteral ::= "0" | NonZeroDigit DecimalDigits?
+DecimalDigits ::= DecimalDigit | DecimalDigits DecimalDigit
+DecimalDigit ::= "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
+ExponentPart ::= ExponentIndicator SignedInteger
+ExponentIndicator ::= "e" | "E"
+SignedInteger ::= DecimalDigits | "+" DecimalDigits | "-" DecimalDigits
+HexIntegerLiteral ::= "0x" HexDigit | "0X" HexDigit | HexIntegerLiteral HexDigit
+
+StringLiteral ::= "\"" DoubleStringCharacters? "\"" | "'" SingleStringCharacters? "'"
+DoubleStringCharacters ::= DoubleStringCharacter DoubleStringCharacters?
+SingleStringCharacters ::= SingleStringCharacter SingleStringCharacters?
+DoubleStringCharacter ::= SourceCharacter - ("\"" | "\\" | LineTerminator) | "\\" EscapeSequence
+SingleStringCharacter ::= SourceCharacter - ("'" | "\\" | LineTerminator) | "\\" EscapeSequence
+EscapeSequence ::= CharacterEscapeSequence | "0" <not followed by DecimalDigit> | HexEscapeSequence | UnicodeEscapeSequence
+CharacterEscapeSequence ::= SingleEscapeCharacter | NonEscapeCharacter
+SingleEscapeCharacter ::= "'" | "\"" | "\\" | "b" | "f" | "n" | "r" | "t" | "v"
+NonEscapeCharacter ::= SourceCharacter - (EscapeCharacter | LineTerminator)
+EscapeCharacter ::= SingleEscapeCharacter | DecimalDigit | "x" | "u"
+HexEscapeSequence ::= "x" HexDigit HexDigit
+UnicodeEscapeSequence ::= "u" HexDigit HexDigit HexDigit HexDigit
+
+RegularExpressionLiteral ::= "/" RegularExpressionBody "/" IdentifierPart*
+RegularExpressionBody ::= RegularExpressionFirstChar RegularExpressionChar*
+RegularExpressionFirstChar ::= SourceCharacter - (LineTerminator | "\\" | "/" | "*") | BackslashSequence
+RegularExpressionChar ::= SourceCharacter - (LineTerminator | "\\" | "/") | BackslashSequence
+BackslashSequence ::= "\" (SourceCharacter - LineTerminator)
+
+// ----------------------------------------------------------------------
+// Expressions
+// --------------------------------------------------------------------------------
+
+/* 16 */
+PrimaryExpression ::= "this" | Identifier | Literal | ArrayLiteral | ObjectLiteral | "(" Expression ")" | FunctionExpression
+ArrayLiteral ::= "[" ElementList? Elision? "]"
+ElementList ::= Elision? AssignmentExpression | ElementList "," Elision? AssignmentExpression
+Elision ::= "," | Elision ","
+ObjectLiteral ::= "{" PropertyNameAndValueList? "}"
+PropertyNameAndValueList ::= | PropertyName ":" AssignmentExpression | PropertyNameAndValueList "," PropertyName ":" AssignmentExpression
+PropertyName ::= Identifier | StringLiteral | NumericLiteral
+FunctionExpression ::= "function" Identifier? "(" FormalParameterList? ")" "{" FunctionBody "}"
+/* 15 */
+MemberExpression ::= PrimaryExpression | MemberExpression "[" Expression "]" | MemberExpression "." Identifier | "new" MemberExpression Arguments
+/* 14 */
+LeftHandSideExpression ::= "new"* MemberExpression | CallExpression
+CallExpression ::= MemberExpression Arguments | CallExpression Arguments | CallExpression "[" Expression "]" | CallExpression "." Identifier
+Arguments ::= "(" ArgumentList? ")"
+ArgumentList ::= AssignmentExpression | ArgumentList "," AssignmentExpression
+/* 13 */
+PostfixExpression ::= LeftHandSideExpression | LeftHandSideExpression <not followed by LineTerminator> PostfixOperator
+PostfixOperator ::= "++" | "--"
+/* 12 */
+UnaryExpression ::= PostfixExpression | UnaryOperator UnaryExpression
+UnaryOperator ::= "delete" | "void" | "typeof" | "++" | "--" | "+" | "-" | "~" | "!"
+/* 11 */
+MultiplicativeExpression ::= UnaryExpression | MultiplicativeExpression MultiplicativeOperator UnaryExpression
+MultiplicativeOperator ::= "*" | "/" | "%"
+/* 10 */
+AdditiveExpression ::= MultiplicativeExpression | AdditiveExpression AdditiveOperator MultiplicativeExpression
+AdditiveOperator ::= "+" | "-"
+/* 9 */
+ShiftExpression ::= AdditiveExpression | ShiftExpression ShiftOperator AdditiveExpression
+ShiftOperator ::= "<<" | ">>" | ">>>"
+/* 8 */
+RelationalExpression<noin> ::= ShiftExpression | RelationalExpression<noin> RelationalOperator<noin> ShiftExpression
+RelationalOperator<noin> ::= "<" | ">" | "<=" | ">=" | "instanceof" | "in" <when !noin>
+/* 7 */
+EqualityExpression<noin> := RelationalExpression | EqualityExpression<noin> EqualityOperator RelationalExpression<noin>
+EqualityOperator ::= "==" | "!=" | "===" | "!=="
+/* 6 */
+BitwiseANDExpression<noin> ::= EqualityExpression<noin> | BitwiseANDExpression<noin> BitwiseANDOperator EqualityExpression<noin>
+BitwiseANDOperator ::= "&"
+/* 5 */
+BitwiseXORExpression<noin> ::= BitwiseANDExpression<noin> | BitwiseXORExpression<noin> BitwiseXOROperator BitwiseANDExpression<noin>
+BitwiseXOROperator ::= "^"
+/* 4 */
+BitwiseORExpression<noin> ::= BitwiseXORExpression<noin> | BitwiseORExpression<noin> BitwiseOROperator BitwiseXORExpression<noin>
+BitwiseOROperator ::= "|"
+/* 3 */
+LogicalANDExpression<noin> ::= BitwiseORExpression<noin> | LogicalANDExpression<noin> LogicalANDOperator BitwiseORExpression<noin>
+LogicalANDOperator ::= "&&"
+/* 2 */
+LogicalORExpression<noin> ::= LogicalANDExpression<noin> | LogicalORExpression<noin> LogicalOROperator LogicalANDExpression<noin>
+LogicalOROperator ::= "||"
+/* 1 */
+AssignmentExpression<noin> ::= LogicalORExpression<noin> | LogicalORExpression<noin> "?" AssignmentExpression<noin> ":" AssignmentExpression<noin> | LeftHandSideExpression AssignmentOperator AssignmentExpression<noin>
+AssignmentOperator := "=" | "*=" | "/=" | "%=" | "+=" | "-=" | "<<=" | ">>=" | ">>>=" | "&=" | "^=" | "|="
+/* 0 */
+Expression<noin> ::= AssignmentExpression<noin> | Expression<noin> "," AssignmentExpression<noin>
+
+// --------------------------------------------------------------------------------
+// Statements
+// --------------------------------------------------------------------------------
+
+//
+// Rules of Automatic Semicolon Insertion:
+//
+//  - When, as the program is parsed from left to right, a token (called the offending token) is encountered
+//    that is not allowed by any production of the grammar, then a semicolon is automatically inserted
+//    before the offending token if one or more of the following conditions is true:
+//      1. The offending token is separated from the previous token by at least one LineTerminator.
+//      2. The offending token is }.
+//  - When, as the program is parsed from left to right, the end of the input stream of tokens is
+//    encountered and the parser is unable to parse the input token stream as a single complete
+//    ECMAScript Program, then a semicolon is automatically inserted at the end of the input stream.
+//  - When, as the program is parsed from left to right, a token is encountered that is allowed by some
+//    production of the grammar, but the production is a restricted production and the token would be the
+//    first token for a terminal or nonterminal immediately following the annotation “[no LineTerminator
+//    here]” within the restricted production (and therefore such a token is called a restricted token), and
+//    the restricted token is separated from the previous token by at least one LineTerminator, then a
+//    semicolon is automatically inserted before the restricted token.
+// However, there is an additional overriding condition on the preceding rules: a semicolon is never
+// inserted automatically if the semicolon would then be parsed as an empty statement or if that semicolon
+// would become one of the two semicolons in the header of a for statement (section 12.6.3).
+//
+
+Statement ::= Block | VariableStatement | EmptyStatement | ExpressionStatement | IfStatement | IterationStatement | ContinueStatement | BreakStatement | ReturnStatement | WithStatement | LabelledStatement | SwitchStatement | ThrowStatement | TryStatement
+Block ::= "{" StatementList? "}"
+StatementList ::= Statement | StatementList Statement
+VariableStatement ::= "var" VariableDeclarationList<false> ";"
+VariableDeclarationList<noin> ::= VariableDeclaration<noin> | VariableDeclarationList<noin> "," VariableDeclaration<noin>
+VariableDeclaration<noin> ::= Identifier Initialiser<noin>?
+Initialiser<noin> ::= "=" AssignmentExpression<noin>
+EmptyStatement ::= ";"
+ExpressionStatement ::= <not followed by "{" | "function"> Expression<false> ";"
+IfStatement ::= "if" "(" Expression<false> ")" Statement "else" Statement | "if" "(" Expression<false> ")" Statement
+IterationStatement ::= "do" Statement "while" "(" Expression<false> ")" ";" | "while" "(" Expression<false> ")" Statement | "for" "(" LoopClause ")" Statement
+LoopClause ::= Expression<true>? ";" Expression<false>? ";" Expression<false>? | "var" VariableDeclarationList<true> ";" Expression<false>? ";" Expression<false>? | LeftHandSideExpression "in" Expression<false> | "var" VariableDeclaration<true> "in" Expression<false>
+ContinueStatement ::= "continue" <not followed by LineTerminator> Identifier? ";"
+BreakStatement ::= "break" <not followed by LineTerminator> Identifier? ";"
+ReturnStatement ::= "return" <not followed by LineTerminator> Expression<false>? ";"
+WithStatement ::= "with" "(" Expression<false> ")" Statement
+SwitchStatement ::= "switch" "(" Expression<false> ")" CaseBlock
+CaseBlock ::= "{" CaseClauses? "}" | "{" CaseClauses? DefaultClause CaseClauses? "}"
+CaseClauses ::= CaseClause | CaseClauses CaseClause
+CaseClause ::= "case" Expression<false> ":" StatementList?
+DefaultClause ::= "default" ":" StatementList?
+LabelledStatement ::= Identifier ":" Statement
+ThrowStatement ::= "throw" <not followed by LineTerminator> Expression<false> ";"
+TryStatement ::= "try" Block Catch | "try" Block Finally | "try" Block Catch Finally
+Catch ::= catch "(" Identifier ")" Block
+Finally ::= "finally" Block
+
+// ----------------------------------------------------------------------
+// Functions and Programs
+// --------------------------------------------------------------------------------
+
+FunctionDeclaration ::= "function" Identifier "(" FormalParameterList? ")" "{" FunctionBody "}"
+FormalParameterList ::= Identifier | FormalParameterList "," Identifier
+FunctionBody ::= SourceElements
+Program ::= SourceElements
+SourceElements ::= SourceElement | SourceElements SourceElement
+SourceElement ::= Statement | FunctionDeclaration
+
+// --------------------------------------------------------------------------------
+// Regular Expressions
+// --------------------------------------------------------------------------------
+
+Pattern ::= Disjunction
+Disjunction ::= Alternative | Alternative "|" Disjunction
+Alternative ::= <empty> | Alternative Term
+Term ::= Assertion | Atom | Atom Quantifier
+Assertion ::= "^" | "$" | "\\" "b" | "\\" "B"
+Quantifier ::= QuantifierPrefix | QuantifierPrefix "?"
+QuantifierPrefix ::= "*" | "+" | "?" | "{" DecimalDigits "}" | "{" DecimalDigits "," "}" | "{" DecimalDigits "," DecimalDigits "}"
+Atom ::= PatternCharacter | "." | "\\" AtomEscape | CharacterClass | "(" Disjunction ")" | "(" "?" ":" Disjunction ")" | "(" "?" "=" Disjunction ")" "(" "?" "!" Disjunction ")"
+PatternCharacter ::= SourceCharacter - ("^" | "$" | "\\" | "." | "*" | "+" | "?" | "(" | ")" | "[" | "]" | "{" | "}" | "|")
+AtomEscape ::= DecimalEscape | CharacterEscape | CharacterClassEscape
+CharacterEscape ::= ControlEscape | "c" ControlLetter | HexEscapeSequence | UnicodeEscapeSequence | IdentityEscape
+ControlEscape ::= "f" | "n" | "r" | "t" | "v"
+ControlLetter ::= "a".."z" | "A".."Z"
+IdentityEscape ::= SourceCharacter - IdentifierPart
+DecimalEscape ::= DecimalIntegerLiteral <not followed by DecimalDigit>
+CharacterClass ::= "[" <not followed by "^" ClassRanges "]" | "[" "^" ClassRanges "]"
+ClassRanges ::= <empty> | NonemptyClassRanges
+NonemptyClassRanges ::= ClassAtom | ClassAtom NonemptyClassRangesNoDash | ClassAtom "-" ClassAtom ClassRanges
+NonemptyClassRangesNoDash ::= ClassAtom | ClassAtomNoDash NonemptyClassRangesNoDash | ClassAtomNoDash "-" ClassAtom ClassRanges
+ClassAtom ::= "-" | ClassAtomNoDash
+ClassAtomNoDash ::= SourceCharacter - ("\\" | "]" | "-") | "\\" ClassEscape
+ClassEscape ::= DecimalEscape | "b" | CharacterEscape | CharacterClassEscape

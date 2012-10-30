@@ -1,0 +1,1216 @@
+﻿            HeaderSize = Helpers.Align((uint)(376 + 40*file.PEFileHeader.NumberOfSections), FileAlignment);
+            ImageSize = Helpers.Align
+                (HeaderSize +
+                 file.SectionHeaders.Aggregate
+                     (default(uint),
+                      (count, section) =>
+                      count +=
+                      Helpers.Align
+                          (section.SizeOfRawData > 0 ? section.SizeOfRawData : SectionAlignment, SectionAlignment)),
+                 SectionAlignment);
+
+
+
+#if false
+        public void PersistIndexes(PEFile file)
+        {
+            IATSize = 40;
+            IATRVA = file.ImportTable.ImportAddressTableRVA;
+            file.TextSection.Writer.Align(4);
+            ImportTableRVA = file.TextSection.PointerToRawData + file.TextSection.Writer.Offset;
+            ImportTableSize = file.ImportTable.Write(file.TextSection.Writer);
+            file.TextSection.Writer.Align(4);
+            CLIHeaderRVA = file.TextSection.PointerToRawData + file.TextSection.Writer.Offset;
+            CLIHeaderSize = file.CLIHeader.Write(file.TextSection.Writer);
+        }
+#endif
+
+       public void PersistIndexes(PEFile file)
+        {
+            var offset = file.SectionHeaders.Aggregate
+                (file.PEOptionalHeader.NTSpecificFields.HeaderSize,
+                 (current, sectionHeader) =>
+                 current + Helpers.Align(sectionHeader.SizeOfRawData, PEHeaderNTSpecificFields.SectionAlignment));
+
+            VirtualAddress = PointerToRawData = offset;
+            SizeOfRawData = Helpers.Align((uint)Data.Length, file.PEOptionalHeader.NTSpecificFields.FileAlignment);
+            if (SizeOfRawData == 0) SizeOfRawData = file.PEOptionalHeader.NTSpecificFields.FileAlignment;
+
+            VirtualSize = Data.Length > 0 ? (uint)Data.Length : SizeOfRawData;
+        }
+
+
+        public void PersistIndexes(PEFile file)
+        {
+            file.TextSection.Writer.Align(4);
+            NameRVA = file.TextSection.PointerToRawData + file.TextSection.Writer.Offset;
+            file.TextSection.Writer.WriteAsciiZeroTerminatedString(Name, 1);
+            file.TextSection.Writer.Align(4);
+            ImportLookupTableRVA = file.TextSection.PointerToRawData + file.TextSection.Writer.Offset;
+            file.ImportLookupTable.Write(file.TextSection.Writer);
+            file.TextSection.Writer.Align(4);
+            ImportAddressTableRVA = file.TextSection.PointerToRawData + file.TextSection.Writer.Offset;
+            file.ImportAddressTable.Write(file.TextSection.Writer);
+        }
+
+#if false
+        public void PersistIndexes(PEFile file)
+        {
+            file.TextSection.Writer.Align(4);
+            HintNameTableRVA = file.TextSection.PointerToRawData + file.TextSection.Writer.Offset;
+            HintNameTable.Write(file.TextSection.Writer);
+        }
+#endif
+
+
+#if false
+        public void PersistIndexes(PEFile file)
+        {
+            var rowRef = new RowRef<PETableRow>(file.MetadataTables.Token, 0, EntryPoint);
+            rowRef.PersistIndexes();
+            EntryPointToken = rowRef.CodedIndex;
+
+            file.TextSection.Writer.Align(4);
+            MetaDataRVA = file.TextSection.PointerToRawData + file.TextSection.Writer.Offset;
+            MetaDataSize = file.MetadataHeader.Write(file.TextSection.Writer);
+        }
+#endif
+
+
+
+
+
+
+    public class TypeDefOrRefIndexCoding : BigOrSmallIndexCoding<PERow>
+    {
+        public TypeDefOrRefIndexCoding(MetadataTables tables) : base(tables)
+        {
+        }
+
+        public override PERow CodedIndexToRow(uint codedIndex)
+        {
+            var table = codedIndex & 0x3;
+            var index = (int)(codedIndex >> 2);
+            switch (table)
+            {
+                case 0:
+                    return Tables.TypeDefTable[index];
+                case 1:
+                    return Tables.TypeRefTable[index];
+                case 2:
+                    return Tables.TypeSpecTable[index];
+                default:
+                    throw new PEException("invalid TypeDefOrRef coded index");
+            }
+        }
+
+        public override uint RowToCodedIndex(PERow row)
+        {
+            switch (row.Tag)
+            {
+                case TableTag.TypeDef:
+                    return (uint)row.Index << 2;
+                case TableTag.TypeRef:
+                    return (uint)row.Index << 2 | 1;
+                case TableTag.TypeSpec:
+                    return (uint)row.Index << 2 | 2;
+                default:
+                    throw new PEException("invalid TypeDefOrRef row");
+            }
+        }
+
+        public override int MaxIndex()
+        {
+            return MaxCount(Tables.TypeDefTable, Tables.TypeRefTable, Tables.TypeSpecTable);
+        }
+
+        public override uint MaxCodedIndex()
+        {
+            return (uint)MaxIndex() << 2 | 2;
+        }
+
+        public override uint Succ(uint codedIndex)
+        {
+            return codedIndex + 4;
+        }
+    }
+
+    public class HasConstantIndexCoding : BigOrSmallIndexCoding<PERow>
+    {
+        public HasConstantIndexCoding(MetadataTables tables) : base(tables)
+        {
+        }
+
+        public override PERow CodedIndexToRow(uint codedIndex)
+        {
+            var table = codedIndex & 0x3;
+            var index = (int)(codedIndex >> 2);
+            switch (table)
+            {
+                case 0:
+                    return Tables.FieldTable[index];
+                case 1:
+                    return Tables.ParamTable[index];
+                case 2:
+                    return Tables.PropertyTable[index];
+                default:
+                    throw new PEException("invalid HasConstant coded index");
+            }
+        }
+
+        public override uint RowToCodedIndex(PERow row)
+        {
+            switch (row.Tag)
+            {
+            case TableTag.Field:
+                return (uint)row.Index << 2;
+            case TableTag.Param:
+                return (uint)row.Index << 2 | 1;
+            case TableTag.Property:
+                return (uint)row.Index << 2 | 2;
+            default:
+                throw new PEException("invalid HasConstant row");
+            }
+        }
+
+        public override int MaxIndex()
+        {
+            return MaxCount(Tables.FieldTable, Tables.ParamTable, Tables.PropertyTable);
+        }
+
+        public override uint MaxCodedIndex()
+        {
+            return (uint)MaxIndex() << 2 | 2;
+        }
+
+        public override uint Succ(uint codedIndex)
+        {
+            return codedIndex + 4;
+        }
+    }
+
+	     public class HasCustomAttributeIndexCoding : BigOrSmallIndexCoding<PERow>
+    {
+        public HasCustomAttributeIndexCoding(MetadataTables tables) : base(tables)
+        {
+        }
+
+        public override PERow CodedIndexToRow(uint codedIndex)
+        {
+            var table = codedIndex & 0x1f;
+            var index = (int)(codedIndex >> 5);
+            switch (table)
+            {
+                case 0:
+                    return Tables.MethodDefTable[index];
+                case 1:
+                    return Tables.FieldTable[index];
+                case 2:
+                    return Tables.TypeRefTable[index];
+                case 3:
+                    return Tables.TypeDefTable[index];
+                case 4:
+                    return Tables.ParamTable[index];
+                case 5:
+                    return Tables.InterfaceImplTable[index];
+                case 6:
+                    return Tables.MemberRefTable[index];
+                case 7:
+                    return Tables.ModuleTable[index];
+                case 8:
+                    return Tables.DeclSecurityTable[index];
+                case 9:
+                    return Tables.PropertyTable[index];
+                case 10:
+                    return Tables.EventTable[index];
+                case 11:
+                    return Tables.StandAloneSigTable[index];
+                case 12:
+                    return Tables.ModuleRefTable[index];
+                case 13:
+                    return Tables.TypeSpecTable[index];
+                case 14:
+                    return Tables.AssemblyTable[index];
+                case 15:
+                    return Tables.AssemblyRefTable[index];
+                case 16:
+                    return Tables.FileTable[index];
+                case 17:
+                    return Tables.ExportedTypeTable[index];
+                case 18:
+                    return Tables.ManifestResourceTable[index];
+                default:
+                    throw new PEException("invalid HasCustomAttribute coded index");
+            }
+        }
+
+        public override uint RowToCodedIndex(PERow row)
+        {
+            switch (row.Tag)
+            {
+                case TableTag.MethodDef:
+                    return (uint)row.Index << 5;
+                case TableTag.Field:
+                    return (uint)row.Index << 5 | 1;
+                case TableTag.TypeRef:
+                    return (uint)row.Index << 5 | 2;
+                case TableTag.TypeDef:
+                    return (uint)row.Index << 5 | 3;
+                case TableTag.Param:
+                    return (uint)row.Index << 5 | 4;
+                case TableTag.InterfaceImpl:
+                    return (uint)row.Index << 5 | 5;
+                case TableTag.MemberRef:
+                    return (uint)row.Index << 5 | 6;
+                case TableTag.Module:
+                    return (uint)row.Index << 5 | 7;
+                case TableTag.DeclSecurity:
+                    return (uint)row.Index << 5 | 8;
+                case TableTag.Property:
+                    return (uint)row.Index << 5 | 9;
+                case TableTag.Event:
+                    return (uint)row.Index << 5 | 10;
+                case TableTag.StandAloneSig:
+                    return (uint)row.Index << 5 | 11;
+                case TableTag.ModuleRef:
+                    return (uint)row.Index << 5 | 12;
+                case TableTag.TypeSpec:
+                    return (uint)row.Index << 5 | 13;
+                case TableTag.Assembly:
+                    return (uint)row.Index << 5 | 14;
+                case TableTag.AssemblyRef:
+                    return (uint)row.Index << 5 | 15;
+                case TableTag.File:
+                    return (uint)row.Index << 5 | 16;
+                case TableTag.ExportedType:
+                    return (uint)row.Index << 5 | 17;
+                case TableTag.ManifestResource:
+                    return (uint)row.Index << 5 | 18;
+                default:
+                    throw new PEException("invalid HasCustomAttribute row");
+            }
+        }
+
+        public override int MaxIndex()
+        {
+            return MaxCount
+                (Tables.MethodDefTable,
+                 Tables.FieldTable,
+                 Tables.TypeRefTable,
+                 Tables.TypeDefTable,
+                 Tables.ParamTable,
+                 Tables.InterfaceImplTable,
+                 Tables.MemberRefTable,
+                 Tables.ModuleTable,
+                 Tables.DeclSecurityTable,
+                 Tables.PropertyTable,
+                 Tables.EventTable,
+                 Tables.StandAloneSigTable,
+                 Tables.ModuleRefTable,
+                 Tables.TypeSpecTable,
+                 Tables.AssemblyTable,
+                 Tables.AssemblyRefTable,
+                 Tables.FileTable,
+                 Tables.ExportedTypeTable,
+                 Tables.ManifestResourceTable);
+        }
+
+        public override uint MaxCodedIndex()
+        {
+            return (uint)MaxIndex() << 5 | 18;
+        }
+
+        public override uint Succ(uint codedIndex)
+        {
+            return codedIndex + 32;
+        }
+    }
+
+	    public class HasFieldMarshalIndexCoding : BigOrSmallIndexCoding<PERow>
+    {
+        public HasFieldMarshalIndexCoding(MetadataTables tables) : base(tables)
+        {
+        }
+
+        public override PERow CodedIndexToRow(uint codedIndex)
+        {
+            var table = codedIndex & 0x1;
+            var index = (int)(codedIndex >> 1);
+            switch (table)
+            {
+                case 0:
+                    return Tables.FieldTable[index];
+                case 1:
+                    return Tables.ParamTable[index];
+                default:
+                    throw new PEException("invalid HasFieldMarshall coded index");
+            }
+        }
+
+        public override uint RowToCodedIndex(PERow row)
+        {
+            switch (row.Tag)
+            {
+            case TableTag.Field:
+                return (uint)row.Index << 1;
+            case TableTag.Param:
+                return (uint)row.Index << 1 | 1;
+            default:
+                throw new PEException("invalid HasFieldMarshall row");
+            }
+        }
+
+        public override int MaxIndex()
+        {
+            return MaxCount(Tables.FieldTable, Tables.ParamTable);
+        }
+
+        public override uint MaxCodedIndex()
+        {
+            return (uint)MaxIndex() << 1 | 1;
+        }
+
+        public override uint Succ(uint codedIndex)
+        {
+            return codedIndex + 2;
+        }
+    }
+
+    public class HasDeclSecurityIndexCoding : BigOrSmallIndexCoding<PERow>
+    {
+        public HasDeclSecurityIndexCoding(MetadataTables tables) : base(tables)
+        {
+        }
+
+        public override PERow CodedIndexToRow(uint codedIndex)
+        {
+            var table = codedIndex & 0x3;
+            var index = (int)(codedIndex >> 2);
+            switch (table)
+            {
+                case 0:
+                    return Tables.TypeDefTable[index];
+                case 1:
+                    return Tables.MethodDefTable[index];
+                case 2:
+                    return Tables.AssemblyTable[index];
+                default:
+                    throw new PEException("invalid HasDeclSecurity coded index");
+            }
+        }
+
+        public override uint RowToCodedIndex(PERow row)
+        {
+            switch (row.Tag)
+            {
+            case TableTag.TypeDef:
+                return (uint)row.Index << 2;
+            case TableTag.MethodDef:
+                return (uint)row.Index << 2 | 1;
+            case TableTag.Assembly:
+                return (uint)row.Index << 2 | 2;
+            default:
+                throw new PEException("Invalid HasDeclSecurity row");
+            }
+        }
+
+        public override int MaxIndex()
+        {
+            return MaxCount(Tables.TypeDefTable, Tables.MethodDefTable, Tables.AssemblyTable);
+        }
+
+        public override uint MaxCodedIndex()
+        {
+            return (uint)MaxIndex() << 2 | 2;
+        }
+
+        public override uint Succ(uint codedIndex)
+        {
+            return codedIndex + 4;
+        }
+    }
+
+	    public class MemberRefParentIndexCoding : BigOrSmallIndexCoding<PERow>
+    {
+        public MemberRefParentIndexCoding(MetadataTables tables) : base(tables)
+        {
+        }
+
+        public override PERow CodedIndexToRow(uint codedIndex)
+        {
+            var table = codedIndex & 0x7;
+            var index = (int)(codedIndex >> 3);
+            switch (table)
+            {
+                case 0:
+                    return Tables.TypeDefTable[index];
+                case 1:
+                    return Tables.TypeRefTable[index];
+                case 2:
+                    return Tables.ModuleRefTable[index];
+                case 3:
+                    return Tables.MethodDefTable[index];
+                case 4:
+                    return Tables.TypeSpecTable[index];
+                default:
+                    throw new PEException("invalid MemberRefParent coded index");
+            }
+        }
+
+        public override uint RowToCodedIndex(PERow row)
+        {
+            switch (row.Tag)
+            {
+            case TableTag.TypeDef:
+                return (uint)row.Index << 3;
+            case TableTag.TypeRef:
+                return (uint)row.Index << 3 | 1;
+            case TableTag.ModuleRef:
+                return (uint)row.Index << 3 | 2;
+            case TableTag.MethodDef:
+                return (uint)row.Index << 3 | 3;
+            case TableTag.TypeSpec:
+                return (uint)row.Index << 3 | 4;
+            default:
+                throw new PEException("Invalid MemberRefParent row");
+            }
+        }
+
+        public override int MaxIndex()
+        {
+            return MaxCount
+                (Tables.TypeDefTable,
+                 Tables.TypeRefTable,
+                 Tables.ModuleRefTable,
+                 Tables.MethodDefTable,
+                 Tables.TypeSpecTable);
+        }
+
+        public override uint MaxCodedIndex()
+        {
+            return (uint)MaxIndex() << 3 | 4;
+        }
+
+        public override uint Succ(uint codedIndex)
+        {
+            return codedIndex + 8;
+        }
+    }
+
+	    public class HasSemanticsIndexCoding : BigOrSmallIndexCoding<PERow>
+    {
+        public HasSemanticsIndexCoding(MetadataTables tables) : base(tables)
+        {
+        }
+
+        public override PERow CodedIndexToRow(uint codedIndex)
+        {
+            var table = codedIndex & 0x1;
+            var index = (int)(codedIndex >> 1);
+            switch (table)
+            {
+                case 0:
+                    return Tables.EventTable[index];
+                case 1:
+                    return Tables.PropertyTable[index];
+                default:
+                    throw new PEException("invalid HasSemantics coded index");
+            }
+        }
+
+        public override uint RowToCodedIndex(PERow row)
+        {
+            switch (row.Tag)
+            {
+            case TableTag.Event:
+                return (uint)row.Index << 1;
+            case TableTag.Property:
+                return (uint)row.Index << 1 | 1;
+            default:
+                throw new PEException("invalid HasSemantics row");
+            }
+        }
+
+        public override int MaxIndex()
+        {
+            return MaxCount(Tables.EventTable, Tables.PropertyTable);
+        }
+
+        public override uint MaxCodedIndex()
+        {
+            return (uint)MaxIndex() << 1 | 1;
+        }
+
+        public override uint Succ(uint codedIndex)
+        {
+            return codedIndex + 2;
+        }
+    }
+
+
+	    public class MethodDefOrRefIndexCoding : BigOrSmallIndexCoding<PERow>
+    {
+        public MethodDefOrRefIndexCoding(MetadataTables tables) : base(tables)
+        {
+        }
+
+        public override PERow CodedIndexToRow(uint codedIndex)
+        {
+            var table = codedIndex & 0x1;
+            var index = (int)(codedIndex >> 1);
+            switch (table)
+            {
+                case 0:
+                    return Tables.MethodDefTable[index];
+                case 1:
+                    return Tables.MemberRefTable[index];
+                default:
+                    throw new PEException("invalid MethodDefOrRef coded index");
+            }
+        }
+
+        public override uint RowToCodedIndex(PERow row)
+        {
+            switch (row.Tag)
+            {
+            case TableTag.MethodDef:
+                return (uint)row.Index << 1;
+            case TableTag.MemberRef:
+                return (uint)row.Index << 1 | 1;
+            default:
+                throw new PEException("invalid MethodDefOrRef row");
+            }
+        }
+
+        public override int MaxIndex()
+        {
+            return MaxCount(Tables.MethodDefTable, Tables.MemberRefTable);
+        }
+
+        public override uint MaxCodedIndex()
+        {
+            return (uint)MaxIndex() << 1 | 1;
+        }
+
+        public override uint Succ(uint codedIndex)
+        {
+            return codedIndex + 2;
+        }
+    }
+
+
+	    public abstract class IndexCoding<T> where T : PERow
+    {
+        public readonly MetadataTables Tables;
+
+        protected IndexCoding(MetadataTables tables)
+        {
+            Tables = tables;
+        }
+
+        public abstract uint ReadCodedIndex(BlobReader reader);
+        public abstract T CodedIndexToRow(uint codedIndex);
+        public abstract uint RowToCodedIndex(T row);
+        public abstract void WriteCodedIndex(BlobWriter writer, uint codedIndex);
+        public abstract int MaxIndex();
+        public abstract uint MaxCodedIndex();
+        public abstract uint Succ(uint codedIndex);
+
+        protected static int MaxCount(params IHasNumRows[] tables)
+        {
+            var m = 0;
+            foreach (var table in tables)
+            {
+                var c = table.NumRows;
+                if (c > m)
+                    m = c;
+            }
+            return m;
+        }
+    }
+
+    public abstract class BigOrSmallIndexCoding<T> : IndexCoding<T> where T : PERow
+    {
+        public bool IsBig;
+
+        protected BigOrSmallIndexCoding(MetadataTables tables) : base(tables)
+        {
+        }
+
+        public override uint ReadCodedIndex(BlobReader reader)
+        {
+            return IsBig ? reader.ReadUInt32() : reader.ReadUInt16();
+        }
+
+        public override void WriteCodedIndex(BlobWriter writer, uint codedIndex)
+        {
+            if (IsBig)
+                writer.WriteUInt32(codedIndex);
+            else
+                writer.WriteUInt16((ushort)codedIndex);
+        }
+
+        public void SetIndexSize()
+        {
+            IsBig = MaxCodedIndex() > 0x00010000;
+        }
+    }
+
+Z
+
+
+
+
+    public class MemberForwardedIndexCoding : BigOrSmallIndexCoding<PERow>
+    {
+        public MemberForwardedIndexCoding(MetadataTables tables) : base(tables)
+        {
+        }
+
+        public override PERow CodedIndexToRow(uint codedIndex)
+        {
+            var table = codedIndex & 0x1;
+            var index = (int)(codedIndex >> 1);
+            switch (table)
+            {
+                case 0:
+                    return Tables.FieldTable[index];
+                case 1:
+                    return Tables.MethodDefTable[index];
+                default:
+                    throw new PEException("invalid MemberForwarded coded index");
+            }
+        }
+
+        public override uint RowToCodedIndex(PERow row)
+        {
+            switch (row.Tag)
+            {
+            case TableTag.Field:
+                return (uint)row.Index << 1;
+            case TableTag.MethodDef:
+                return (uint)row.Index << 1 | 1;
+            default:
+                throw new PEException("invalid MemberForwarded row");
+            }
+        }
+
+        public override int MaxIndex()
+        {
+            return MaxCount(Tables.FieldTable, Tables.MethodDefTable);
+        }
+
+        public override uint MaxCodedIndex()
+        {
+            return (uint)MaxIndex() << 1 | 1;
+        }
+
+        public override uint Succ(uint codedIndex)
+        {
+            return codedIndex + 2;
+        }
+    }
+
+	    public class ImplementationIndexCoding : BigOrSmallIndexCoding<PERow>
+    {
+        public ImplementationIndexCoding(MetadataTables tables) : base(tables)
+        {
+        }
+
+        public override PERow CodedIndexToRow(uint codedIndex)
+        {
+            var table = codedIndex & 0x3;
+            var index = (int)(codedIndex >> 2);
+            switch (table)
+            {
+                case 0:
+                    return Tables.FileTable[index];
+                case 1:
+                    return Tables.AssemblyRefTable[index];
+                case 2:
+                    return Tables.ExportedTypeTable[index];
+                default:
+                    throw new PEException("invalid Implementation coded index");
+            }
+        }
+
+        public override uint RowToCodedIndex(PERow row)
+        {
+            switch (row.Tag)
+            {
+            case TableTag.File:
+                return (uint)row.Index << 2;
+            case TableTag.AssemblyRef:
+                return (uint)row.Index << 2 | 1;
+            case TableTag.ExportedType:
+                return (uint)row.Index << 2 | 2;
+            default:
+                throw new PEException("invalid Implementation row");
+            }
+        }
+
+        public override int MaxIndex()
+        {
+            return MaxCount(Tables.FileTable, Tables.AssemblyRefTable, Tables.ExportedTypeTable);
+        }
+
+        public override uint MaxCodedIndex()
+        {
+            return (uint)MaxIndex() << 2 | 2;
+        }
+
+        public override uint Succ(uint codedIndex)
+        {
+            return codedIndex + 4;
+        }
+    }
+
+    public class CustomAttributeTypeIndexCoding : BigOrSmallIndexCoding<PERow>
+    {
+        public CustomAttributeTypeIndexCoding(MetadataTables tables) : base(tables)
+        {
+        }
+
+        public override PERow CodedIndexToRow(uint codedIndex)
+        {
+            var table = codedIndex & 0x7;
+            var index = (int)(codedIndex >> 3);
+            switch (table)
+            {
+                case 0:
+                case 1:
+                case 4:
+                    throw new PEException("unused CustomAttributeType coded index");
+                case 2:
+                    return Tables.MethodDefTable[index];
+                case 3:
+                    return Tables.MemberRefTable[index];
+                default:
+                    throw new PEException("invalid CustomAttributeType coded index");
+            }
+        }
+
+        public override uint RowToCodedIndex(PERow row)
+        {
+            switch (row.Tag)
+            {
+            case TableTag.MethodDef:
+                return (uint)row.Index << 3 | 2;
+            case TableTag.MemberRef:
+                return (uint)row.Index << 3 | 3;
+            default:
+                throw new PEException("invalid CustomAttributeType row");
+            }
+        }
+
+        public override int MaxIndex()
+        {
+            return MaxCount(Tables.MethodDefTable, Tables.MemberRefTable);
+        }
+
+        public override uint MaxCodedIndex()
+        {
+            return (uint)MaxIndex() << 3 | 3;
+        }
+
+        public override uint Succ(uint codedIndex)
+        {
+            return codedIndex + 8;
+        }
+    }
+
+    public class ResolutionScopeIndexCoding : BigOrSmallIndexCoding<PERow>
+    {
+        public ResolutionScopeIndexCoding(MetadataTables tables) : base(tables)
+        {
+        }
+
+        public override PERow CodedIndexToRow(uint codedIndex)
+        {
+            var table = codedIndex & 0x3;
+            var index = (int)(codedIndex >> 2);
+            switch (table)
+            {
+                case 0:
+                    return Tables.ModuleTable[index];
+                case 1:
+                    return Tables.ModuleRefTable[index];
+                case 2:
+                    return Tables.AssemblyRefTable[index];
+                case 3:
+                    return Tables.TypeRefTable[index];
+                default:
+                    throw new PEException("invalid ResolutionScope coded index tag");
+            }
+        }
+
+        public override uint RowToCodedIndex(PERow row)
+        {
+            switch (row.Tag)
+            {
+            case TableTag.Module:
+                return (uint)row.Index << 2;
+            case TableTag.ModuleRef:
+                return (uint)row.Index << 2 | 1;
+            case TableTag.AssemblyRef:
+                return (uint)row.Index << 2 | 2;
+            case TableTag.TypeRef:
+                return (uint)row.Index << 2 | 3;
+            default:
+                throw new PEException("invalid ResolutionScope row");
+            }
+        }
+
+        public override int MaxIndex()
+        {
+            return MaxCount(Tables.ModuleTable, Tables.ModuleRefTable, Tables.AssemblyRefTable, Tables.TypeRefTable);
+        }
+
+        public override uint MaxCodedIndex()
+        {
+            return (uint)MaxIndex() << 2 | 3;
+        }
+
+        public override uint Succ(uint codedIndex)
+        {
+            return codedIndex + 4;
+        }
+    }
+
+	    public class TypeOrMethodDefIndexCoding : BigOrSmallIndexCoding<PERow>
+    {
+        public TypeOrMethodDefIndexCoding(MetadataTables tables) : base(tables)
+        {
+        }
+
+        public override PERow CodedIndexToRow(uint codedIndex)
+        {
+            var table = codedIndex & 0x1;
+            var index = (int)(codedIndex >> 1);
+            switch (table)
+            {
+                case 0:
+                    return Tables.TypeDefTable[index];
+                case 1:
+                    return Tables.MethodDefTable[index];
+                default:
+                    throw new PEException("invalid TypeOrMethodDef coded index");
+            }
+        }
+
+        public override uint RowToCodedIndex(PERow row)
+        {
+            switch (row.Tag)
+            {
+            case TableTag.TypeDef:
+                return (uint)row.Index << 1;
+            case TableTag.MethodDef:
+                return (uint)row.Index << 1 | 1;
+            default:
+                throw new PEException("invalid TypeOrMethodDef row");
+            }
+        }
+
+        public override int MaxIndex()
+        {
+            return MaxCount(Tables.TypeDefTable, Tables.MethodDefTable);
+        }
+
+        public override uint MaxCodedIndex()
+        {
+            return (uint)MaxIndex() << 1 | 1;
+        }
+
+        public override uint Succ(uint codedIndex)
+        {
+            return codedIndex + 2;
+        }
+    }
+
+	    public struct RowRef<T> where T : PERow
+    {
+        public readonly IndexCoding<T> Coding;
+        // Some encoding of a base-1 index into a table
+        public uint CodedIndex;
+        [CanBeNull]
+        public T Value;
+
+        public RowRef(IndexCoding<T> coding, uint codedIndex, T value)
+        {
+            Coding = coding;
+            CodedIndex = codedIndex;
+            Value = value;
+        }
+
+        public RowRef(IndexCoding<T> coding, BlobReader reader)
+        {
+            Coding = coding;
+            CodedIndex = Coding.ReadCodedIndex(reader);
+            Value = null;
+        }
+
+        public void ResolveIndexes()
+        {
+            Value = CodedIndex == 0 ? null : Coding.CodedIndexToRow(CodedIndex);
+        }
+
+        public bool IsNull { get { return Value == null; } }
+
+        public void PersistIndexes()
+        {
+            CodedIndex = Value == null ? 0 : Coding.RowToCodedIndex(Value);
+        }
+
+        public void Write(BlobWriter writer)
+        {
+            Coding.WriteCodedIndex(writer, CodedIndex);
+        }
+    }
+
+
+	    public abstract class DirectIndexCoding<T> : BigOrSmallIndexCoding<T> where T : PERow
+    {
+        protected DirectIndexCoding(MetadataTables tables) : base(tables)
+        {
+        }
+
+        public override uint MaxCodedIndex()
+        {
+            return (uint)MaxIndex();
+        }
+
+        public override uint Succ(uint codedIndex)
+        {
+            return codedIndex + 1;
+        }
+    }
+
+
+	    public class TokenIndexCoding : IndexCoding<PERow>
+    {
+        public TokenIndexCoding(MetadataTables tables) : base(tables)
+        {
+        }
+
+        public override uint ReadCodedIndex(BlobReader reader)
+        {
+            return reader.ReadUInt32();
+        }
+
+        public override PERow CodedIndexToRow(uint codedIndex)
+        {
+            var table = (TableTag)(codedIndex >> 24);
+            var index = (int)(codedIndex & 0xffffff);
+            switch (table)
+            {
+            case TableTag.Assembly:
+                return Tables.AssemblyTable[index];
+            case TableTag.AssemblyOS:
+                return Tables.AssemblyOSTable[index];
+            case TableTag.AssemblyProcessor:
+                return Tables.AssemblyProcessorTable[index];
+            case TableTag.AssemblyRef:
+                return Tables.AssemblyRefTable[index];
+            case TableTag.AssemblyRefOS:
+                return Tables.AssemblyRefOSTable[index];
+            case TableTag.AssemblyRefProcessor:
+                return Tables.AssemblyRefProcessorTable[index];
+            case TableTag.ClassLayout:
+                return Tables.ClassLayoutTable[index];
+            case TableTag.Constant:
+                return Tables.ConstantTable[index];
+            case TableTag.CustomAttribute:
+                return Tables.CustomAttributeTable[index];
+            case TableTag.DeclSecurity:
+                return Tables.DeclSecurityTable[index];
+            case TableTag.EventMap:
+                return Tables.EventMapTable[index];
+            case TableTag.Event:
+                return Tables.EventTable[index];
+            case TableTag.ExportedType:
+                return Tables.ExportedTypeTable[index];
+            case TableTag.Field:
+                return Tables.FieldTable[index];
+            case TableTag.FieldLayout:
+                return Tables.FieldLayoutTable[index];
+            case TableTag.FieldMarshal:
+                return Tables.FieldMarshalTable[index];
+            case TableTag.FieldRVA:
+                return Tables.FieldRVATable[index];
+            case TableTag.File:
+                return Tables.FileTable[index];
+            case TableTag.GenericParam:
+                return Tables.GenericParamTable[index];
+            case TableTag.GenericParamConstraint:
+                return Tables.GenericParamConstraintTable[index];
+            case TableTag.ImplMap:
+                return Tables.ImplMapTable[index];
+            case TableTag.InterfaceImpl:
+                return Tables.InterfaceImplTable[index];
+            case TableTag.ManifestResource:
+                return Tables.ManifestResourceTable[index];
+            case TableTag.MemberRef:
+                return Tables.MemberRefTable[index];
+            case TableTag.MethodDef:
+                return Tables.MethodDefTable[index];
+            case TableTag.MethodImpl:
+                return Tables.MethodImplTable[index];
+            case TableTag.MethodSemantics:
+                return Tables.MethodSemanticsTable[index];
+            case TableTag.MethodSpec:
+                return Tables.MethodSpecTable[index];
+            case TableTag.Module:
+                return Tables.ModuleTable[index];
+            case TableTag.ModuleRef:
+                return Tables.ModuleRefTable[index];
+            case TableTag.NestedClass:
+                return Tables.NestedClassTable[index];
+            case TableTag.Param:
+                return Tables.ParamTable[index];
+            case TableTag.Property:
+                return Tables.PropertyTable[index];
+            case TableTag.PropertyMap:
+                return Tables.PropertyMapTable[index];
+            case TableTag.StandAloneSig:
+                return Tables.StandAloneSigTable[index];
+            case TableTag.TypeDef:
+                return Tables.TypeDefTable[index];
+            case TableTag.TypeRef:
+                return Tables.TypeRefTable[index];
+            case TableTag.TypeSpec:
+                return Tables.TypeSpecTable[index];
+            default:
+                throw new PEException("invalid metadata token table");
+            }
+        }
+
+        public override uint RowToCodedIndex(PERow row)
+        {
+            var table = (uint)row.Tag;
+            var index = (uint)row.Index;
+            return table << 24 | (index & 0xffffff);
+        }
+
+        public override void WriteCodedIndex(BlobWriter writer, uint codedIndex)
+        {
+            writer.WriteUInt32(codedIndex);
+        }
+
+        public override int MaxIndex()
+        {
+            return MaxCount
+                (Tables.AssemblyTable,
+                 Tables.AssemblyOSTable,
+                 Tables.AssemblyProcessorTable,
+                 Tables.AssemblyRefTable,
+                 Tables.AssemblyRefOSTable,
+                 Tables.AssemblyRefProcessorTable,
+                 Tables.ClassLayoutTable,
+                 Tables.ConstantTable,
+                 Tables.CustomAttributeTable,
+                 Tables.DeclSecurityTable,
+                 Tables.EventMapTable,
+                 Tables.EventTable,
+                 Tables.ExportedTypeTable,
+                 Tables.FieldTable,
+                 Tables.FieldLayoutTable,
+                 Tables.FieldMarshalTable,
+                 Tables.FieldRVATable,
+                 Tables.FileTable,
+                 Tables.GenericParamTable,
+                 Tables.GenericParamConstraintTable,
+                 Tables.ImplMapTable,
+                 Tables.InterfaceImplTable,
+                 Tables.ManifestResourceTable,
+                 Tables.MemberRefTable,
+                 Tables.MethodDefTable,
+                 Tables.MethodImplTable,
+                 Tables.MethodSemanticsTable,
+                 Tables.MethodSpecTable,
+                 Tables.ModuleTable,
+                 Tables.ModuleRefTable,
+                 Tables.NestedClassTable,
+                 Tables.ParamTable,
+                 Tables.PropertyTable,
+                 Tables.PropertyMapTable,
+                 Tables.StandAloneSigTable,
+                 Tables.TypeDefTable,
+                 Tables.TypeRefTable,
+                 Tables.TypeSpecTable);
+        }
+
+        public override uint MaxCodedIndex()
+        {
+            return (uint)TableTag.GenericParamConstraint << 2 |  (uint)MaxIndex();
+        }
+
+        public override uint Succ(uint codedIndex)
+        {
+            return codedIndex + 1;
+        }
+    }
+
+    public class TypeDefOrRefVarLenIndexCoding : IndexCoding<PERow>
+    {
+        public TypeDefOrRefVarLenIndexCoding(MetadataTables tables) : base(tables)
+        {
+        }
+
+        public override uint ReadCodedIndex(BlobReader reader)
+        {
+            return reader.ReadCompressedUInt32();
+        }
+
+        public override PERow CodedIndexToRow(uint codedIndex)
+        {
+            var table = codedIndex & 0x3;
+            var index = (int)(codedIndex >> 2);
+            switch (table)
+            {
+                case 0:
+                    return Tables.TypeDefTable[index];
+                case 1:
+                    return Tables.TypeRefTable[index];
+                case 2:
+                    return Tables.TypeSpecTable[index];
+                default:
+                    throw new PEException("invalid TypeDefOrRef coded index");
+            }
+        }
+
+        public override uint RowToCodedIndex(PERow row)
+        {
+            switch (row.Tag)
+            {
+                case TableTag.TypeDef:
+                    return (uint)row.Index << 2;
+                case TableTag.TypeRef:
+                    return (uint)row.Index << 2 | 1;
+                case TableTag.TypeSpec:
+                    return (uint)row.Index << 2 | 2;
+                default:
+                    throw new PEException("invalid TypeDefOrRef row");
+            }
+        }
+
+        public override void WriteCodedIndex(BlobWriter writer, uint codedIndex)
+        {
+            writer.WriteCompressedUInt32(codedIndex);
+        }
+
+        public override int MaxIndex()
+        {
+            return MaxCount(Tables.TypeDefTable, Tables.TypeRefTable, Tables.TypeSpecTable);
+        }
+
+        public override uint MaxCodedIndex()
+        {
+            return (uint)MaxIndex() << 2 | 2;
+        }
+
+        public override uint Succ(uint codedIndex)
+        {
+            return codedIndex + 4;
+        }
+    }
+

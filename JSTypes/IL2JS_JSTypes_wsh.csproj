@@ -1,0 +1,203 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{E216F71D-E14A-4831-BBD3-88D9007BB620}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>
+    </RootNamespace>
+    <AssemblyName>IL2JS_JSTypes_wsh</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <ThrowErrorsInValidation>true</ThrowErrorsInValidation>
+    <IL2JSROOT Condition=" '$(IL2JSROOT)' == '' ">$(Registry:HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\IL2JS@Root)</IL2JSROOT>
+    <IL2JSROOT Condition=" '$(IL2JSROOT)' == '' ">$(Registry:HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\IL2JS@Root)</IL2JSROOT>
+    <IL2JSGenerateJavaScript>false</IL2JSGenerateJavaScript>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>$(IL2JSROOT)\bin\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;WSH</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <NoStdLib>true</NoStdLib>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>$(IL2JSROOT)\bin\</OutputPath>
+    <DefineConstants>TRACE;WSH</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(IL2JSROOT)\JST\Lexemes.cs">
+      <Link>Microsoft\LiveLabs\JavaScript\ManagedInterop\Lexemes.cs</Link>
+    </Compile>
+    <Compile Include="$(IL2JSROOT)\mscorlib\Microsoft\LiveLabs\JavaScript\IL2JS\BreakAttribute.cs">
+      <Link>Microsoft\LiveLabs\JavaScript\IL2JS\BreakAttribute.cs</Link>
+    </Compile>
+    <Compile Include="$(IL2JSROOT)\mscorlib\Microsoft\LiveLabs\JavaScript\IL2JS\IgnoreAttribute.cs">
+      <Link>Microsoft\LiveLabs\JavaScript\IL2JS\IgnoreAttribute.cs</Link>
+    </Compile>
+    <Compile Include="$(IL2JSROOT)\mscorlib\Microsoft\LiveLabs\JavaScript\IL2JS\InlineAttribute.cs">
+      <Link>Microsoft\LiveLabs\JavaScript\IL2JS\InlineAttribute.cs</Link>
+    </Compile>
+    <Compile Include="$(IL2JSROOT)\mscorlib\Microsoft\LiveLabs\JavaScript\IL2JS\InteropGeneratedAttribute.cs">
+      <Link>Microsoft\LiveLabs\JavaScript\IL2JS\InteropGeneratedAttribute.cs</Link>
+    </Compile>
+    <Compile Include="$(IL2JSROOT)\mscorlib\Microsoft\LiveLabs\JavaScript\IL2JS\UsedAttribute.cs">
+      <Link>Microsoft\LiveLabs\JavaScript\IL2JS\UsedAttribute.cs</Link>
+    </Compile>
+    <Compile Include="$(IL2JSROOT)\mscorlib\Microsoft\LiveLabs\JavaScript\IL2JS\EntryPointAttribute.cs">
+      <Link>Microsoft\LiveLabs\JavaScript\IL2JS\EntryPointAttribute.cs</Link>
+    </Compile>
+    <Compile Include="$(IL2JSROOT)\mscorlib\Microsoft\LiveLabs\JavaScript\Interop\Casing.cs">
+      <Link>Microsoft\LiveLabs\JavaScript\Interop\Casing.cs</Link>
+    </Compile>
+    <Compile Include="$(IL2JSROOT)\mscorlib\Microsoft\LiveLabs\JavaScript\Interop\Creation.cs">
+      <Link>Microsoft\LiveLabs\JavaScript\Interop\Creation.cs</Link>
+    </Compile>
+    <Compile Include="$(IL2JSROOT)\mscorlib\Microsoft\LiveLabs\JavaScript\Interop\ExportAttribute.cs">
+      <Link>Microsoft\LiveLabs\JavaScript\Interop\ExportAttribute.cs</Link>
+    </Compile>
+    <Compile Include="$(IL2JSROOT)\mscorlib\Microsoft\LiveLabs\JavaScript\Interop\ImportAttribute.cs">
+      <Link>Microsoft\LiveLabs\JavaScript\Interop\ImportAttribute.cs</Link>
+    </Compile>
+    <Compile Include="$(IL2JSROOT)\mscorlib\Microsoft\LiveLabs\JavaScript\Interop\ImportKeyAttribute.cs">
+      <Link>Microsoft\LiveLabs\JavaScript\Interop\ImportKeyAttribute.cs</Link>
+    </Compile>
+    <Compile Include="$(IL2JSROOT)\mscorlib\Microsoft\LiveLabs\JavaScript\Interop\InstanceState.cs">
+      <Link>Microsoft\LiveLabs\JavaScript\Interop\InstanceState.cs</Link>
+    </Compile>
+    <Compile Include="$(IL2JSROOT)\mscorlib\Microsoft\LiveLabs\JavaScript\Interop\InteropAttribute.cs">
+      <Link>Microsoft\LiveLabs\JavaScript\Interop\InteropAttribute.cs</Link>
+    </Compile>
+    <Compile Include="$(IL2JSROOT)\mscorlib\Microsoft\LiveLabs\JavaScript\Interop\JSContext.cs">
+      <Link>Microsoft\LiveLabs\JavaScript\Interop\JSContext.cs</Link>
+    </Compile>
+    <Compile Include="$(IL2JSROOT)\mscorlib\Microsoft\LiveLabs\JavaScript\Interop\JSException.cs">
+      <Link>Microsoft\LiveLabs\JavaScript\Interop\JSException.cs</Link>
+    </Compile>
+    <Compile Include="$(IL2JSROOT)\mscorlib\Microsoft\LiveLabs\JavaScript\Interop\NamingAttribute.cs">
+      <Link>Microsoft\LiveLabs\JavaScript\Interop\NamingAttribute.cs</Link>
+    </Compile>
+    <Compile Include="$(IL2JSROOT)\mscorlib\Microsoft\LiveLabs\JavaScript\Interop\NotExportedAttribute.cs">
+      <Link>Microsoft\LiveLabs\JavaScript\Interop\NotExportedAttribute.cs</Link>
+    </Compile>
+    <Compile Include="$(IL2JSROOT)\mscorlib\Microsoft\LiveLabs\JavaScript\Interop\Qualification.cs">
+      <Link>Microsoft\LiveLabs\JavaScript\Interop\Qualification.cs</Link>
+    </Compile>
+    <Compile Include="$(IL2JSROOT)\mscorlib\Microsoft\LiveLabs\JavaScript\JSArguments.cs">
+      <Link>Microsoft\LiveLabs\JavaScript\JSArguments.cs</Link>
+    </Compile>
+    <Compile Include="$(IL2JSROOT)\mscorlib\Microsoft\LiveLabs\JavaScript\JSArray.cs">
+      <Link>Microsoft\LiveLabs\JavaScript\JSArray.cs</Link>
+    </Compile>
+    <Compile Include="$(IL2JSROOT)\mscorlib\Microsoft\LiveLabs\JavaScript\JSArray`1.cs">
+      <Link>Microsoft\LiveLabs\JavaScript\JSArray`1.cs</Link>
+    </Compile>
+    <Compile Include="$(IL2JSROOT)\mscorlib\Microsoft\LiveLabs\JavaScript\JSDate.cs">
+      <Link>Microsoft\LiveLabs\JavaScript\JSDate.cs</Link>
+    </Compile>
+    <Compile Include="$(IL2JSROOT)\mscorlib\Microsoft\LiveLabs\JavaScript\JSError.cs">
+      <Link>Microsoft\LiveLabs\JavaScript\JSError.cs</Link>
+    </Compile>
+    <Compile Include="$(IL2JSROOT)\mscorlib\Microsoft\LiveLabs\JavaScript\JSEvalError.cs">
+      <Link>Microsoft\LiveLabs\JavaScript\JSEvalError.cs</Link>
+    </Compile>
+    <Compile Include="$(IL2JSROOT)\mscorlib\Microsoft\LiveLabs\JavaScript\JSFunction.cs">
+      <Link>Microsoft\LiveLabs\JavaScript\JSFunction.cs</Link>
+    </Compile>
+    <Compile Include="$(IL2JSROOT)\mscorlib\Microsoft\LiveLabs\JavaScript\JSGlobals.cs">
+      <Link>Microsoft\LiveLabs\JavaScript\JSGlobals.cs</Link>
+    </Compile>
+    <Compile Include="$(IL2JSROOT)\mscorlib\Microsoft\LiveLabs\JavaScript\JSMatchResults.cs">
+      <Link>Microsoft\LiveLabs\JavaScript\JSMatchResults.cs</Link>
+    </Compile>
+    <Compile Include="$(IL2JSROOT)\mscorlib\Microsoft\LiveLabs\JavaScript\JSMath.cs">
+      <Link>Microsoft\LiveLabs\JavaScript\JSMath.cs</Link>
+    </Compile>
+    <Compile Include="$(IL2JSROOT)\mscorlib\Microsoft\LiveLabs\JavaScript\JSNumber.cs">
+      <Link>Microsoft\LiveLabs\JavaScript\JSNumber.cs</Link>
+    </Compile>
+    <Compile Include="$(IL2JSROOT)\mscorlib\Microsoft\LiveLabs\JavaScript\JSObject.cs">
+      <Link>Microsoft\LiveLabs\JavaScript\JSObject.cs</Link>
+    </Compile>
+    <Compile Include="$(IL2JSROOT)\mscorlib\Microsoft\LiveLabs\JavaScript\JSProperty.cs">
+      <Link>Microsoft\LiveLabs\JavaScript\JSProperty.cs</Link>
+    </Compile>
+    <Compile Include="$(IL2JSROOT)\mscorlib\Microsoft\LiveLabs\JavaScript\JSRangeError.cs">
+      <Link>Microsoft\LiveLabs\JavaScript\JSRangeError.cs</Link>
+    </Compile>
+    <Compile Include="$(IL2JSROOT)\mscorlib\Microsoft\LiveLabs\JavaScript\JSReferenceError.cs">
+      <Link>Microsoft\LiveLabs\JavaScript\JSReferenceError.cs</Link>
+    </Compile>
+    <Compile Include="$(IL2JSROOT)\mscorlib\Microsoft\LiveLabs\JavaScript\JSRegExp.cs">
+      <Link>Microsoft\LiveLabs\JavaScript\JSRegExp.cs</Link>
+    </Compile>
+    <Compile Include="$(IL2JSROOT)\mscorlib\Microsoft\LiveLabs\JavaScript\JSString.cs">
+      <Link>Microsoft\LiveLabs\JavaScript\JSString.cs</Link>
+    </Compile>
+    <Compile Include="$(IL2JSROOT)\mscorlib\Microsoft\LiveLabs\JavaScript\JSSyntaxError.cs">
+      <Link>Microsoft\LiveLabs\JavaScript\JSSyntaxError.cs</Link>
+    </Compile>
+    <Compile Include="$(IL2JSROOT)\mscorlib\Microsoft\LiveLabs\JavaScript\JSTypeError.cs">
+      <Link>Microsoft\LiveLabs\JavaScript\JSTypeError.cs</Link>
+    </Compile>
+    <Compile Include="$(IL2JSROOT)\mscorlib\Microsoft\LiveLabs\JavaScript\JSURIError.cs">
+      <Link>Microsoft\LiveLabs\JavaScript\JSURIError.cs</Link>
+    </Compile>
+    <Compile Include="..\mscorlib\Microsoft\LiveLabs\JavaScript\IL2JS\NoInteropAttribute.cs">
+      <Link>Microsoft\LiveLabs\JavaScript\IL2JS\NoInteropAttribute.cs</Link>
+    </Compile>
+    <Compile Include="..\mscorlib\Microsoft\LiveLabs\JavaScript\IL2JS\ReflectionAttribute.cs">
+      <Link>Microsoft\LiveLabs\JavaScript\IL2JS\ReflectionAttribute.cs</Link>
+    </Compile>
+    <Compile Include="..\mscorlib\Microsoft\LiveLabs\JavaScript\IL2JS\ReflectionLevel.cs">
+      <Link>Microsoft\LiveLabs\JavaScript\IL2JS\ReflectionLevel.cs</Link>
+    </Compile>
+    <Compile Include="..\mscorlib\Microsoft\LiveLabs\JavaScript\IL2JS\RuntimeAttribute.cs">
+      <Link>Microsoft\LiveLabs\JavaScript\IL2JS\RuntimeAttribute.cs</Link>
+    </Compile>
+    <Compile Include="..\mscorlib\Microsoft\LiveLabs\JavaScript\IL2JS\UsedTypeAttribute.cs">
+      <Link>Microsoft\LiveLabs\JavaScript\IL2JS\UsedTypeAttribute.cs</Link>
+    </Compile>
+    <Compile Include="Microsoft\LiveLabs\JavaScript\ManagedInterop\CapturedLogException.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\ManagedInterop\ExportInfo.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\ManagedInterop\IBridge.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\ManagedInterop\InteropContext.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\ManagedInterop\InteropContextManager.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\ManagedInterop\InteropDatabase.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\ManagedInterop\InteropStyle.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\ManagedInterop\IPlugin.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\ManagedInterop\Runtime.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\ManagedInterop\SimpleConstructorInfo.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\ManagedInterop\SimpleMethodBase.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\ManagedInterop\SimpleMethodInfo.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\ManagedInterop\SimpleParameterInfo.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\ManagedInterop\StringParser.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\ManagedInterop\SyntaxException.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\ManagedInterop\TypeInfo.cs" />
+    <Compile Include="Microsoft\LiveLabs\JavaScript\ManagedInterop\UniversalDelegate.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Microsoft\LiveLabs\JavaScript\ManagedInterop\runtime.js" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="mscorlib" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSHARP.Targets" />
+  <Import Project="$(IL2JSROOT)\MSBuild\Microsoft.LiveLabs.JavaScript.IL2JS.targets" />
+  <ProjectExtensions>
+    <VisualStudio AllowExistingFolder="true" />
+  </ProjectExtensions>
+</Project>

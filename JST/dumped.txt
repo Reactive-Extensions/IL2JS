@@ -1,0 +1,775 @@
+﻿        public bool Contains(PropertyName propName)
+        {
+            return bindings.ContainsKey(propName);
+        }
+
+        public bool Contains(Identifier id)
+        {
+            return Contains(new PropertyName(id));
+RVA        }
+
+        public bool Contains(string str)
+        {
+            return Contains(new PropertyName(str));
+        }
+
+        public bool Contains(double num)
+        {
+            return Contains(new PropertyName(num));
+        }
+
+        public int Count { get { return propNames.Count; } }
+
+        public Expression this[PropertyName propName]
+        {
+            get { return bindings[propName]; }
+            set { bindings[propName] = value; }
+        }
+
+        public void Add(PropertyName propName, Expression value)
+        {
+            if (bindings.ContainsKey(propName))
+                bindings[propName] = value;
+            else
+            {
+                propNames.Add(propName);
+                bindings.Add(propName, value);
+            }
+        }
+
+        public void Add(Identifier id, Expression value)
+        {
+            Add(new PropertyName(id), value);
+        }
+
+        public void Add(string str, Expression value)
+        {
+            Add(new PropertyName(str), value);
+        }
+
+        public void Add(double num, Expression value)
+        {
+            Add(new PropertyName(num), value);
+        }
+
+        public void AddUnique(PropertyName propName, Expression value)
+        {
+            if (bindings.ContainsKey(propName))
+                throw new ArgumentException("duplicate property name");
+            else
+            {
+                propNames.Add(propName);
+                bindings.Add(propName, value);
+            }
+        }
+
+        public void AddUnique(Identifier id, Expression value)
+        {
+            AddUnique(new PropertyName(id), value);
+        }
+
+        public void AddUnique(string str, Expression value)
+        {
+            AddUnique(new PropertyName(str), value);
+        }
+
+        public void AddUnique(double num, Expression value)
+        {
+            AddUnique(new PropertyName(num), value);
+        }
+
+        public bool Remove(PropertyName propName)
+        {
+            if (!bindings.ContainsKey(propName))
+                return false;
+            propNames.Remove(propName);
+            bindings.Remove(propName);
+            return true;
+        }
+
+        public bool Remove(Identifier id)
+        {
+            return Remove(new PropertyName(id));
+        }
+
+        public bool Remove(string str)
+        {
+            return Remove(new PropertyName(str));
+        }
+
+        public bool Remove(double num)
+        {
+            return Remove(new PropertyName(num));
+        }
+
+        public IEnumerator<KeyValuePair<PropertyName, Expression>> GetEnumerator()
+        {
+            foreach (var propName in propNames)
+                yield return new KeyValuePair<PropertyName, Expression>(propName, bindings[propName]);
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public bool ContainsKey(PropertyName key)
+        {
+            return bindings.ContainsKey(key);
+        }
+
+        public ICollection<PropertyName> Keys
+        {
+            get { return propNames; }
+        }
+
+        public bool TryGetValue(PropertyName key, out Expression value)
+        {
+            return bindings.TryGetValue(key, out value);
+        }
+
+        public ICollection<Expression> Values
+        {
+            get { return bindings.Values; }
+        }
+
+        public void Add(KeyValuePair<PropertyName, Expression> item)
+        {
+            Add(item.Key, item.Value);
+        }
+
+        public void Clear()
+        {
+            propNames.Clear();
+            bindings.Clear();
+        }
+
+        public bool Contains(KeyValuePair<PropertyName, Expression> item)
+        {
+            var ibindings = bindings as IDictionary<PropertyName, Expression>;
+            return ibindings.Contains(item);
+        }
+
+        public void CopyTo(KeyValuePair<PropertyName, Expression>[] array, int arrayIndex)
+        {
+            var ibindings = bindings as IDictionary<PropertyName, Expression>;
+            ibindings.CopyTo(array, arrayIndex);
+        }
+
+        public bool IsReadOnly
+        {
+            get { return false; }
+        }
+
+        public bool Remove(KeyValuePair<PropertyName, Expression> item)
+        {
+            var ibindings = bindings as IDictionary<PropertyName, Expression>;
+            if (ibindings.Remove(item))
+            {
+                propNames.Remove(item.Key);
+                return true;
+            }
+            else
+                return false;
+        }
+     public class ObjectBuilder : IEnumerable<KeyValuePair<PropertyName, Expression>>
+    {
+        [NotNull]
+        private readonly OrdMap<PropertyName, Expression> bindings;
+
+        public ObjectBuilder()
+        {
+            bindings = new OrdMap<PropertyName, Expression>();
+        }
+
+        public void Add(PropertyName name, Expression value)
+        {
+            bindings.Add(name, value);
+        }
+
+        public void Add(string name, Expression value)
+        {
+            Add(new PropertyName(name), value);
+        }
+
+        public void Add(int index, Expression value)
+        {
+            Add(new PropertyName(index), value);
+        }
+
+        public void Add(double index, Expression value)
+        {
+            Add(new PropertyName(index), value);
+        }
+
+        public void Add(StringLiteral str, Expression value)
+        {
+            Add(new PropertyName(str), value);
+        }
+
+        public void Add(NumericLiteral num, Expression value)
+        {
+            Add(new PropertyName(num), value);
+        }
+
+        public void Add(Identifier id, Expression value)
+        {
+            Add(new PropertyName(id), value);
+        }
+
+        public IEnumerator<KeyValuePair<PropertyName, Expression>> GetEnumerator()
+        {
+            return bindings.GetEnumerator();
+        }
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        {
+            return bindings.GetEnumerator();
+        }
+
+        public ObjectLiteral ToLiteral()
+        {
+            return new ObjectLiteral(bindings);
+        }
+    }
+
+
+
+        public override Statement TryToStatement(Func<Identifier> genSym)
+        {
+            var func = Applicand.TryToFunction();
+            if (func != null && func.Parameters.Count == 0 && Arguments.Count == 0)
+                return new BlockStatement(func.Body);
+            else
+            {
+                var args = new Seq<Expression>();
+                var statements = new Seq<Statement>();
+                var ok = true;
+                for (var i = 0; i < Arguments.Count; i++) {
+                    var argStatement = Arguments[i].TryToStatement(genSym);
+                    if (argStatement == null)
+                    {
+                        ok = false;
+                        break;
+                    }
+                    var subStmnts = default(Statement);
+                    var subExpr = default(Expression);
+                    if (!argStatement.TryToStatementAndResult(out subStmnts, out subExpr))
+                    {
+                        ok = false;
+                        break;
+                    }
+                    statements.Add(subStmnts);
+                    if (i == Arguments.Count - 1 || subExpr.IsValue)
+                        args.Add(subExpr);
+                    else
+                    {
+                        var id = genSym();
+                        statements.Add(Statement.Var(id, subExpr));
+                        args.Add(id.ToE());
+                    }
+                }
+                if (ok)
+                {
+                    statements.Add(new ReturnStatement(new CallExpression(Applicand, args)));
+                    return Statement.FromStatements(Loc, statements);
+                }
+                else
+                    return base.TryToStatement(genSym);
+            }
+        }
+
+
+        public virtual bool TryToStatementAndResult(out Statement statement, out Expression result)
+        {
+            statement = null;
+            result = null;
+            return false;
+        }
+
+
+
+        public override bool TryToStatementAndResult(out Statement statement, out Expression result)
+        {
+            var acc = new Seq<Statement>();
+            Flatten(acc);
+            if (acc.Count > 0 && acc[acc.Count - 1].TryToStatementAndResult(out statement, out result))
+            {
+                statement = Statement.FromStatements
+                    (null, acc.Take(acc.Count - 1).Concat(statement.ToStatements()).ToSeq());
+                return true;
+            }
+            else
+                return base.TryToStatementAndResult(out statement, out result);
+        }
+
+
+
+        public override bool TryToStatementAndResult(out Statement statement, out Expression result)
+        {
+            if (Value == null)
+                return base.TryToStatementAndResult(out statement, out result);
+            else
+            {
+                statement = new EmptyStatement();
+                result = Value;
+                return true;
+            }
+        }
+
+
+        public override Expression ConvertToExpression()
+        {
+            var acc = new Seq<Statement>();
+            Flatten(acc);
+            if (acc.Count == 1)
+                return acc[0].ConvertToExpression();
+            else
+                return base.ConvertToExpression();
+        }
+
+
+
+        public override Expression ConvertToExpression()
+        {
+            return Expression;
+        }
+
+
+        public override Expression ConvertToExpression()
+        {
+            if (Value == null)
+                return base.ConvertToExpression();
+            else
+                return Value;
+        }
+
+
+        // Semantically the same as new CallExpression(applicand, args), but will beta-reduce if possible
+        public static Expression Apply(Func<Identifier> genSym, Expression applicand, IImSeq<Expression> args)
+        {
+#if DEBUG_SUBSTITUTE
+            Console.WriteLine("applicand = " + applicand.ToString(true));
+            for (var i = 0; i < args.Count; i++)
+                Console.WriteLine("arg[" + i + "] = " + args[i].ToString(true));
+#endif
+            var res = new CallExpression(applicand, args).Simplify(new SimplifierContext(false, genSym));
+#if DEBUG_SUBSTITUTE
+            Console.WriteLine("result = " + res.ToString(true));
+#endif
+            return res;
+        }
+
+        public static Expression Apply(Func<Identifier> genSym, Expression applicand, params Expression[] args)
+        {
+            return Apply(genSym, applicand, new Seq<Expression>(args));
+        }
+
+
+
+#if false
+        public override Expression TryHoistFunctionBodyInto(ISeq<Statement> statements, SimplifierContext ctxt)
+        {
+            if (Name != null || Parameters.Count > 0)
+                return null;
+            if (Body.Count == 0)
+                return new IdentifierExpression(Identifier.Undefined);
+            var returns = new Seq<ReturnStatement>();
+            foreach (var s in Body)
+                s.AccumReturns(returns);
+            if (returns.Count > 1 || returns.Count == 1 && returns[0] != Body[Body.Count - 1])
+                return null;
+            // We are about to collapse a scope, so must freshen all bound vars within it
+            var subCtxt = ctxt.Nested(false);
+            var boundVars = new Set<Identifier>();
+            foreach (var s in Body)
+                s.CollectBoundVars(boundVars);
+            foreach (var id in boundVars)
+                subCtxt.Freshen(id);
+            if (returns.Count == 0)
+            {
+                foreach (var s in Body)
+                    s.SimplifyInto(statements, subCtxt);
+                return Identifier.Undefined.ToE();
+            }
+            else
+            {
+                for (var i = 0; i < Body.Count - 1; i++)
+                    Body[i].SimplifyInto(statements, subCtxt);
+                return returns[0].Value.Simplify(subCtxt) ?? Identifier.Undefined.ToE();
+            }
+        }
+
+        public override bool TryHoistReturnFunctionBodyInto(ISeq<Statement> statements, SimplifierContext ctxt)
+        {
+            if (Name != null || Parameters.Count > 0)
+                return false;
+            // We are about to collapse a scope, so must freshen all bound vars within it
+            var subCtxt = ctxt.Nested(false);
+            var boundVars = new Set<Identifier>();
+            foreach (var s in Body)
+                s.CollectBoundVars(boundVars);
+            foreach (var id in boundVars)
+                subCtxt.Freshen(id);
+            foreach (var s in Body)
+                s.SimplifyInto(statements, subCtxt);
+            return true;
+        }
+#endif
+
+
+            var func = Applicand.TryToFunction();
+            if (func == null || func.Parameters.Count != Arguments.Count)
+                return new CallExpression(Loc, Applicand.Simplify(ctxt), Arguments.Select(e => e.Simplify(ctxt)).ToSeq());
+            else
+            {
+                var boundVars = new Set<Identifier>();
+                var freeVars = new Map<Identifier, int>();
+                foreach (var s in func.Body)
+                    s.CollectBoundVars(boundVars);
+                foreach (var s in func.Body)
+                    s.CollectFreeVars(boundVars, freeVars);
+                var subCtxt = ctxt.Nested(true);
+                var preamble = default(Seq<Statement>);
+                if (func.EvaluatesArgumentsInLinearOrder(Arguments))
+                {
+                    // We can substitute arguments into each parameter occurence
+                    for (var i = 0; i < Arguments.Count; i++)
+                        subCtxt.Bind(func.Parameters[i], Arguments[i].Simplify(ctxt));
+                }
+                else
+                {
+                    // We must bind each non-value argument to a variable to ensure correct evaluation order
+                    for (var i = 0; i < Arguments.Count; i++)
+                    {
+                        var arg = Arguments[i].Simplify(ctxt);
+                        if (!arg.IsValue)
+                        {
+                            if (preamble == null)
+                                preamble = new Seq<Statement>();
+                            var newid = subCtxt.NameSupply.GenSym();
+                            preamble.Add(Statement.Var(newid, arg));
+                            arg = newid.ToE();
+                        }
+                        subCtxt.Bind(func.Parameters[i], arg);
+                    }
+                }
+                foreach (var id in boundVars)
+                    subCtxt.Freshen(id);
+                var body = new Seq<Statement>();
+                foreach (var s in func.Body)
+                    s.SimplifyInto(body, subCtxt);
+                if (preamble != null)
+                {
+                    foreach (var s in body)
+                        preamble.Add(s);
+                    body = preamble;
+                }
+                return new CallExpression(Loc, new FunctionExpression(Loc, null, body));
+            }
+
+
+        private void Shaddowed(Identifier id)
+        {
+            if (applyEffectsFreeVars.Contains(id))
+            {
+                var newApplyEffects = new Map<Expression, Effects>();
+                var newApplyEffectsFreeVars = new Set<Identifier>();
+                foreach (var kv in applyEffects)
+                {
+                    var freeVars = new Set<Identifier>();
+                    kv.Key.CollectFreeVars(Constants.EmptyIdentifierSet, freeVars);
+                    if (!freeVars.Contains(id))
+                    {
+                        newApplyEffects.Add(kv.Key, kv.Value);
+                        foreach (var id2 in freeVars)
+                            newApplyEffectsFreeVars.Add(id2);
+                    }
+                }
+                applyEffects = newApplyEffects;
+                applyEffectsFreeVars = newApplyEffectsFreeVars;
+            }
+        }
+
+        public void AddApplyEffects(Expression expr, Effects effects)
+        {
+            applyEffects.Add(expr, effects);
+            var freeVars = new Set<Identifier>();
+            expr.CollectFreeVars(Constants.EmptyIdentifierSet, freeVars);
+            foreach (var id in freeVars)
+                applyEffectsFreeVars.Add(id);
+        }
+
+        public Effects ApplyEffects(Expression expr)
+        {
+            var res = default(Effects);
+            if (applyEffects.TryGetValue(expr, out res))
+                return res;
+            else
+                return expr.ApplyEffects(this);
+        }
+
+
+
+
+                    // Capture function body effects before we mix in the result effects.
+                    // Assume effects on locally bound variables don't escape function body. (If any local variables
+                    // escape within a closure, then the application of *that* function will have 'Top' effects, since
+                    // the closure won't be lambda).
+                    var bodyEffects = bodyCtxt.ContextEffects.Hide(localBoundVars);
+
+                    if (ctxt.Statements != null && bodyEffects.CommutableWith(ctxt.ContextEffects) &&
+                        callCtxt.AllArgumentEffects.CommutableWith(ctxt.ContextEffects))
+                    {
+                        // We can hoist both the function body and the evaluation of arguments up into the current
+                        // statements context
+                        var subCtxt = ctxt.InSubSubst();
+                        if (callCtxt.IsOk)
+                        {
+                            // We can move the evaluation of each argument into the unique occurance of its
+                            // corresponding parameter in the function body
+                            for (var j = 0; j < Arguments.Count; j++)
+                                subCtxt.Bind(simpFunc.Parameters[j], simpArguments[j]);
+                        }
+                        else
+                        {
+                            // We must share the evaluation of arguments, but can do so in the statements context
+                            for (var j = 0; j < Arguments.Count; j++)
+                            {
+                                if (!ctxt.IsValue(simpArguments[j]))
+                                {
+                                    var newid = subCtxt.NameSupply.GenSym();
+                                    subCtxt.Add(Statement.Var(newid, simpArguments[j]));
+                                    simpArguments[j] = newid.ToE();
+                                }
+                                subCtxt.Bind(simpFunc.Parameters[j], simpArguments[j]);
+                            }
+                        }
+                        foreach (var id in nonArgBoundVars)
+                            subCtxt.Freshen(id);
+                        foreach (var s in simpBody)
+                            s.Simplify(subCtxt);
+                        var simpValue = retres.Value == null ? null : retres.Value.Simplify(subCtxt);
+                        ctxt.IncludeEffects(subCtxt.ContextEffects);
+                        return simpValue;
+                    }
+                    else
+                    {
+                        // Need a fresh statements context
+                        var subCtxt = ctxt.InSubSubst().InFreshStatements();
+                        // Pre-evaluate arguments to preserve side-effects and sharing
+                        for (var j = 0; j < Arguments.Count; j++)
+                        {
+                            if (!ctxt.IsValue(simpArguments[j]))
+                            {
+                                var newid = subCtxt.NameSupply.GenSym();
+                                subCtxt.Add(Statement.Var(newid, simpArguments[j]));
+                                simpArguments[j] = newid.ToE();
+                            }
+                            subCtxt.Bind(simpFunc.Parameters[j], simpArguments[j]);
+                        }
+                        foreach (var id in nonArgBoundVars)
+                            subCtxt.Freshen(id);
+                        foreach (var s in simpBody)
+                            s.Simplify(subCtxt);
+                        var simpValue = retres.Value == null ? null : retres.Value.Simplify(subCtxt);
+                        ctxt.IncludeEffects(subCtxt.ContextEffects);
+                        return new StatementsPseudoExpression(subCtxt.Statements, simpValue);
+                    }
+                }
+                // else: fallthrough
+            }
+            // else: fallthrough
+
+
+
+    // ----------------------------------------------------------------------
+    // BlockStatement
+    // ----------------------------------------------------------------------
+
+    public class BlockStatement : Statement
+    {
+        [NotNull]
+        public readonly Statements Body;
+
+        public BlockStatement(Location loc, Statements body)
+            : base(loc)
+        {
+            Body = body;
+        }
+
+        public BlockStatement(Statements body)
+        {
+            Body = body;
+        }
+
+        public override StatementFlavor Flavor { get { return StatementFlavor.Block; } }
+
+        public override bool NeedsBraces { get { return false; } }
+
+        public override bool NeedsSpace { get { return false; } }
+
+        public override void Flatten(ISeq<Statement> acc)
+        {
+            Body.Flatten(acc);
+        }
+
+        public override int Size { get { return Body.Size; } }
+
+        public override ControlFlow AccumEffects(EffectsContext fxCtxt, CallContext callCtxt, EvalTimes evalTimes)
+        {
+            return Body.AccumBlockEffects(fxCtxt, callCtxt, evalTimes);
+        }
+
+        public override IImSeq<Expression> SubExpressions { get { return Constants.EmptyExpressions; } }
+
+        public override Statement CloneWithSubExpressions(IImSeq<Expression> subExpressions)
+        {
+            if (subExpressions.Count != 0)
+                throw new InvalidOperationException("mismatched sub-expressions arity");
+            return this;
+        }
+
+        public override IImSeq<Statement> SubStatements { get { return Body.Body; } }
+
+        public override Statement CloneWithSubStatements(IImSeq<Statement> subStatements)
+        {
+            return new BlockStatement(Loc, new Statements(subStatements));
+        }
+
+        public override void CollectBoundVars(IMSet<Identifier> boundVars)
+        {
+            Body.CollectBoundVars(boundVars);
+        }
+
+        public override void CollectFreeVars(IImSet<Identifier> boundVars, IMSet<Identifier> freeVars)
+        {
+            Body.CollectFreeVars(boundVars, freeVars);
+        }
+
+        public override ControlFlow Simplify(SimplifierContext ctxt, EvalTimes evalTimes, bool fallOffIsReturn)
+        {
+            return Body.Simplify(ctxt, evalTimes, fallOffIsReturn);
+        }
+
+        public override ReturnResult ToReturnResult(ISeq<Statement> acc)
+        {
+            return Body.ToReturnResult(acc);
+        }
+
+        public override void Append(Writer writer)
+        {
+            Body.AppendBlock(writer);
+        }
+
+        public override int GetHashCode()
+        {
+            return (int)(0xec4e6c89u ^ (uint)Body.GetHashCode());
+        }
+
+        protected override bool EqualBody(Statement other)
+        {
+            var bs = (BlockStatement)other;
+            return Body.Equals(bs.Body);
+        }
+
+        protected override int CompareBody(Statement other)
+        {
+            var bs = (BlockStatement)other;
+            return Body.CompareTo(bs.Body);
+        }
+    }
+
+
+    // ----------------------------------------------------------------------
+    // EmptyStatement
+    // ----------------------------------------------------------------------
+
+    public class EmptyStatement : Statement
+    {
+        public EmptyStatement(Location loc)
+            : base(loc)
+        {
+        }
+
+        public EmptyStatement()
+        {
+        }
+
+        public override StatementFlavor Flavor { get { return StatementFlavor.Empty; } }
+
+        public override bool NeedsBraces { get { return false; } }
+
+        public override bool NeedsSpace { get { return false; } }
+
+        public override void Flatten(ISeq<Statement> acc)
+        {
+        }
+
+        public override int Size { get { return 0; } }
+
+        public override ControlFlow AccumEffects(EffectsContext fxCtxt, CallContext callCtxt, EvalTimes evalTimes)
+        {
+            return ControlFlow.AlwaysReturn;
+        }
+
+        public override IImSeq<Expression> SubExpressions { get { return Constants.EmptyExpressions; } }
+
+        public override Statement CloneWithSubExpressions(IImSeq<Expression> subExpressions)
+        {
+            if (subExpressions.Count != 0)
+                throw new InvalidOperationException("mismatched sub-expressions arity");
+            return this;
+        }
+
+        public override IImSeq<Statement> SubStatements { get { return Constants.EmptyStatements; } }
+
+        public override Statement CloneWithSubStatements(IImSeq<Statement> subStatements)
+        {
+            if (subStatements.Count != 0)
+                throw new InvalidOperationException("mismatched sub-statements arity");
+            return this;
+        }
+
+        public override void CollectBoundVars(IMSet<Identifier> boundVars)
+        {
+        }
+
+        public override void CollectFreeVars(IImSet<Identifier> boundVars, IMSet<Identifier> freeVars)
+        {
+        }
+
+        public override ControlFlow Simplify(SimplifierContext ctxt, EvalTimes evalTimes, bool fallOffIsReturn)
+        {
+            return ControlFlow.AlwaysReturn;
+        }
+
+
+        public override ReturnResult ToReturnResult(ISeq<Statement> acc)
+        {
+            return ReturnResult.None;
+        }
+
+        public override void Append(Writer writer)
+        {
+            writer.Append(';');
+            writer.EndLine();
+        }
+
+        public override int GetHashCode()
+        {
+            var res = 0x3f84d5b5u;
+            return (int)res;
+        }
+
+        protected override bool EqualBody(Statement other)
+        {
+            return true;
+        }
+
+        protected override int CompareBody(Statement other)
+        {
+            return 0;
+        }
+    }
+

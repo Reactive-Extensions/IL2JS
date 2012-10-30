@@ -1,0 +1,75 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <PropertyGroup>
+    <IL2JSInputAssembly>$(IntermediateOutputPath)$(TargetName)$(TargetExt)</IL2JSInputAssembly>
+    <IL2JSIsLibrary Condition=" '$(OutputType)' == 'Library' and ( '$(XapOutputs)' == '' or '$(XapOutputs)'  == 'false' ) ">true</IL2JSIsLibrary>
+    <IL2JSIsLibrary Condition=" '$(OutputType)' != 'Library' or '$(XapOutputs)' == 'true' ">false</IL2JSIsLibrary>
+    <IL2JSROOT Condition=" '$(IL2JSROOT)' == '' ">$(Registry:HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\IL2JS@Root)</IL2JSROOT>
+    <IL2JSROOT Condition=" '$(IL2JSROOT)' == '' ">$(Registry:HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\IL2JS@Root)</IL2JSROOT>
+    <IL2JSGenerateJavaScript Condition=" '$(IL2JSGenerateJavaScript)' == '' ">true</IL2JSGenerateJavaScript>
+    <IL2JSGenerateStartPage Condition=" '$(IL2JSGenerateStartPage)' == '' ">true</IL2JSGenerateStartPage>
+    <IL2JSGenerateInterop Condition=" '$(IL2JSGenerateInterop)' == '' ">true</IL2JSGenerateInterop>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(IL2JSIsLibrary)' == 'false' and '$(IL2JSGenerateJavaScript)' == 'true' and '$(IL2JSGenerateStartPage)' == 'true'">
+    <PrepareForRunDependsOn>
+      PerformIL2JSStartPage;
+      $(PrepareForRunDependsOn)
+    </PrepareForRunDependsOn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(IL2JSIsLibrary)' == 'false' and '$(IL2JSGenerateJavaScript)' == 'true' ">
+    <PrepareForRunDependsOn>
+      PerformIL2JSCompile;
+      $(PrepareForRunDependsOn)
+    </PrepareForRunDependsOn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(IL2JSGenerateInterop)' == 'true' ">
+    <PrepareForRunDependsOn>
+      PerformIL2JSRewrite;
+      $(PrepareForRunDependsOn)
+    </PrepareForRunDependsOn>
+  </PropertyGroup>
+
+  <UsingTask AssemblyFile="$(IL2JSROOT)\bin\IL2JS_Tasks.dll" TaskName="IL2JSRewriter"/>
+  <UsingTask AssemblyFile="$(IL2JSROOT)\bin\IL2JS_Tasks.dll" TaskName="IL2JSCompiler"/>
+  <UsingTask AssemblyFile="$(IL2JSROOT)\bin\IL2JS_Tasks.dll" TaskName="IL2JSStartPage"/>
+
+  <Target
+    Name="PerformIL2JSRewrite"
+    Inputs="$(IL2JSInputAssembly)"
+    Outputs="$(IL2JSInputAssembly).dummy">
+    <IL2JSRewriter
+      RewriteFileName="$(IL2JSInputAssembly)"
+      ReferenceFileNames="@(ReferencePath)"
+      OutputFileName="$(IL2JSInputAssembly)"
+      KeyFile="$(AssemblyOriginatorKeyFile)"
+      DelaySign="$(DelaySign)" />
+    <Touch
+      AlwaysCreate="true"
+      Files="$(IL2JSInputAssembly).dummy" />
+  </Target>
+
+  <Target
+    Name="PerformIL2JSCompile"
+    Inputs="$(IL2JSInputAssembly)"
+    Outputs="$(OutputPath)\start.js">
+    <IL2JSCompiler
+      Options="$(IL2JSCOptions)"
+      Configuration="$(Configuration)"
+      Platform="$(Platform)"
+      OutputDirectory="$(OutputPath)"
+      ReferenceFileNames="@(ReferencePath)"
+      CompileFileNames="$(IL2JSInputAssembly)" />
+  </Target>
+
+  <Target
+    Name="PerformIL2JSStartPage"
+    Inputs="$(IL2JSInputAssembly)"
+    Outputs="Start_il2js.html Start_silverlight.html $(OutputPath)\il2js.html $(OutputPath)\silverlight.html">
+    <IL2JSStartPage
+      OutputDirectory="$(OutputPath)"/>
+  </Target>
+
+</Project>

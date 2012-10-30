@@ -1,0 +1,98 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.21022</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{F2C14A9D-2552-4A43-BDB8-1F4BC5E87E9C}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>plinq_devtests</RootNamespace>
+    <AssemblyName>PlinqTest</AssemblyName>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DefineConstants Condition="'$(ENABLE_MANAGED_SCHEDULER_UNITTESTS)' !='' ">EXPOSE_MANAGED_SCHEDULER</DefineConstants>
+    <NoStdLib>true</NoStdLib>
+    <NoExplicitReferenceToStdLib>true</NoExplicitReferenceToStdLib>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>pfx.snk</AssemblyOriginatorKeyFile>
+    <DelaySign>false</DelaySign>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <DefineConstants>DEBUG;TRACE;PFX_LEGACY_3_5</DefineConstants>
+    <DefineConstants Condition="'$(ENABLE_MANAGED_SCHEDULER_UNITTESTS)' !='' ">EXPOSE_MANAGED_SCHEDULER</DefineConstants>
+    <WarningLevel>4</WarningLevel>
+    <OutputPath>bin\Debug\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <NoStdLib>true</NoStdLib>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <DefineConstants>TRACE;PFX_LEGACY_3_5</DefineConstants>
+    <DefineConstants Condition="'$(ENABLE_MANAGED_SCHEDULER_UNITTESTS)' !='' ">EXPOSE_MANAGED_SCHEDULER</DefineConstants>
+    <WarningLevel>4</WarningLevel>
+    <OutputPath>bin\Release\</OutputPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="mscorlib" />
+    <Reference Include="System" />
+    <Reference Include="System.Core, Version=3.5.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="test\BlockingCollectionTests.cs" />
+    <Compile Include="test\CdsCancellation\BarrierCancellationTests.cs" />
+    <Compile Include="test\CdsCancellation\BlockingCollectionCancellationTests.cs" />
+    <Compile Include="test\CdsCancellation\CancellationTokenTests.cs" />
+    <Compile Include="test\CdsCancellation\CdsCancellationCoreHarness.cs" />
+    <Compile Include="test\CdsCancellation\CountdownEventCancellationTests.cs" />
+    <Compile Include="test\CdsCancellation\ManualResetEventSlimCancellationTests.cs" />
+    <Compile Include="test\CdsCancellation\OperationCanceledExceptionTests.cs" />
+    <Compile Include="test\CdsCancellation\SemaphoreSlimCancellationTests.cs" />
+    <Compile Include="test\CdsTests.cs" />
+    <Compile Include="test\ConcurrentDictionaryTests.cs" />
+    <Compile Include="test\ConcurrentBagTests.cs" />
+    <Compile Include="test\ChannelTests.cs" />
+    <Compile Include="test\ExchangeTests.cs" />
+    <Compile Include="test\LazyInitTests.cs" />
+    <Compile Include="test\ThreadLocalTests.cs" />
+    <Compile Include="test\PartitionedEnumeratorTests.cs" />
+    <Compile Include="test\PlinqCancellation\PlinqCancellationCoreHarness.cs" />
+    <Compile Include="test\PlinqMiscTests.cs" />
+    <Compile Include="test\PlinqModesTests.cs" />
+    <Compile Include="test\QueryOperatorPairTests.cs" />
+    <Compile Include="test\QueryOperatorPerfTests.cs" />
+    <Compile Include="test\QueryOperatorTests.cs" />
+    <Compile Include="test\TestHarnessAssert.cs" />
+    <Compile Include="test\SemaphoreSlimTests.cs" />
+    <Compile Include="test\SpinLockTests.cs" />
+    <Compile Include="test\TaskRtScenarios.cs" />
+    <Compile Include="test\TaskRtTests.cs" />
+    <Compile Include="test\TaskSchedulerExtensibilityTests.cs" />
+    <Compile Include="test\TestHarness.cs" />
+    <Compile Include="test\BarrierTests.cs" />
+    <Compile Include="test\TestLog.cs" />
+    <Compile Include="test\PlinqDelegateExceptions\PlinqDelegateExceptionHelpers.cs" />
+    <Compile Include="test\PlinqDelegateExceptions\PlinqDelegateExceptions.cs" />
+    <Compile Include="test\PartitionerStaticTests.cs" />
+    <Compile Include="test\MscorlibFxCopValidator.cs" />
+    <Compile Include="test\Pfx3.5Tests.cs" />
+    <Compile Include="test\PfxPerfBvt.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="ParallelExtensions_3_5.csproj">
+      <Project>{2A463822-70A5-4095-A3DF-96CA4EACE93F}</Project>
+      <Name>ParallelExtensions_3_5</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="pfx.snk" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

@@ -1,0 +1,180 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{BFC43B0B-E1AC-417E-B0FC-1FE1F750A67A}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Microsoft.Cci</RootNamespace>
+    <AssemblyName>IL2JS_CCI</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <IL2JSROOT Condition=" '$(IL2JSROOT)' == '' ">$(Registry:HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\IL2JS@Root)</IL2JSROOT>
+    <IL2JSROOT Condition=" '$(IL2JSROOT)' == '' ">$(Registry:HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\IL2JS@Root)</IL2JSROOT>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <OldToolsVersion>3.5</OldToolsVersion>
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>$(IL2JSROOT)\bin\</OutputPath>
+    <DefineConstants>CCINamespace;TRACE;DEBUG;WHIDBEY;WHIDBEYwithGenericsAndIEqualityComparer;AllowCsharpConstructorSyntax</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRules>
+    </CodeAnalysisRules>
+    <NoStdLib>false</NoStdLib>
+    <CodeAnalysisRuleSet>Migrated rules for IL2JS_CCI.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>$(IL2JSROOT)\bin\</OutputPath>
+    <DefineConstants>CCINamespace;TRACE;;WHIDBEY;WHIDBEYwithGenericsAndIEqualityComparer;AllowCsharpConstructorSyntax</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="AssemblyCache.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Comparer.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DoubleVisitor.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Duplicator.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="ExceptionStrings.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="FastFileIO.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="ILGenerator.cs" />
+    <Compile Include="ListTemplate.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MemoryMappedFile.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Metadata.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Nodes.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="OpCode.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="PDBreaderWriter\BitAccess.cs" />
+    <Compile Include="PDBreaderWriter\BitSet.cs" />
+    <Compile Include="PDBreaderWriter\CvInfo.cs" />
+    <Compile Include="PDBreaderWriter\DataStream.cs" />
+    <Compile Include="PDBreaderWriter\DbiDbgHdr.cs" />
+    <Compile Include="PDBreaderWriter\DbiHeader.cs" />
+    <Compile Include="PDBreaderWriter\DbiModuleInfo.cs" />
+    <Compile Include="PDBreaderWriter\DbiSecCon.cs" />
+    <Compile Include="PDBreaderWriter\IntHashTable.cs" />
+    <Compile Include="PDBreaderWriter\MsfDirectory.cs" />
+    <Compile Include="PDBreaderWriter\PdbDebugException.cs" />
+    <Compile Include="PDBreaderWriter\PdbException.cs" />
+    <Compile Include="PDBreaderWriter\PdbFile.cs" />
+    <Compile Include="PDBreaderWriter\PdbFileHeader.cs" />
+    <Compile Include="PDBreaderWriter\PdbFunction.cs" />
+    <Compile Include="PDBreaderWriter\PdbLine.cs" />
+    <Compile Include="PDBreaderWriter\PdbLines.cs" />
+    <Compile Include="PDBreaderWriter\PdbReader.cs" />
+    <Compile Include="PDBreaderWriter\PdbScope.cs" />
+    <Compile Include="PDBreaderWriter\PdbSlot.cs" />
+    <Compile Include="PDBreaderWriter\PdbSource.cs" />
+    <Compile Include="PDBreaderWriter\PdbWriter.cs" />
+    <Compile Include="Reader.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Specializer.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="StandardIds.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="StandardVisitor.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="SystemTypes.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Unstacker.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Updater.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Writer.cs">
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="ExceptionStrings.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System">
+    </Reference>
+    <Reference Include="System.Core">
+    </Reference>
+    <Reference Include="System.Data">
+    </Reference>
+    <Reference Include="System.Xml">
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Migrated rules for IL2JS_CCI.ruleset" />
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
+      <Visible>False</Visible>
+      <ProductName>Windows Installer 3.1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

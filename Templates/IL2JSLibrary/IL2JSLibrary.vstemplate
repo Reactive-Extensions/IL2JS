@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<VSTemplate Version="3.0.0" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005" Type="Project">
+  <TemplateData>
+    <Name>IL2JS Library</Name>
+    <Description>An IL2JS library.</Description>
+    <Icon>Logo.ico</Icon>
+    <ProjectType>CSharp</ProjectType>
+    <TemplateGroupID>Silverlight</TemplateGroupID>
+    <SortOrder>90</SortOrder>
+    <RequiredFrameworkVersion>4.0</RequiredFrameworkVersion>
+    <CreateNewFolder>true</CreateNewFolder>
+    <DefaultName>IL2JSLibrary</DefaultName>
+    <ProvideDefaultName>true</ProvideDefaultName>
+    <LocationField>Enabled</LocationField>
+    <PromptForSaveOnCreation>true</PromptForSaveOnCreation>
+    <EnableLocationBrowseButton>true</EnableLocationBrowseButton>
+    <NumberOfParentCategoriesToRollUp>1</NumberOfParentCategoriesToRollUp>
+  </TemplateData>
+  <TemplateContent>
+      <Project File="IL2JSLibrary.csproj" ReplaceParameters="true">
+        <ProjectItem OpenInEditor="true" ReplaceParameters="true" >Class.cs</ProjectItem>
+      </Project>
+  </TemplateContent>
+</VSTemplate>

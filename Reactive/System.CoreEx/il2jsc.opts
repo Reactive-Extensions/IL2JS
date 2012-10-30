@@ -1,0 +1,14 @@
+@$IL2JSROOT\MSBuild\il2jsc.common.debug.opts
+-usedDefsOnly
+-reference "D:\lldevtools\developers\mshields\IL2JS\bin\Debug\IL2JS_Html.dll"
+-reference "D:\lldevtools\developers\mshields\IL2JS\bin\Debug\IL2JS_JSTypes_silverlight.dll"
+-reference "D:\lldevtools\developers\mshields\IL2JS\bin\Debug\IL2JS_SilverlightInterop.dll"
+-reference "C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\Silverlight\v3.0\mscorlib.dll"
+-reference "C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\Silverlight\v3.0\System.Core.dll"
+-reference "C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\Silverlight\v3.0\system.dll"
+-reference "D:\lldevtools\developers\mshields\IL2JS\bin\Debug\System.Observable.dll"
+-reference "C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\Silverlight\v3.0\System.Windows.dll"
+-compile "obj\Debug\System.CoreEx.dll"
+-outDir "D:\lldevtools\developers\mshields\IL2JS\bin\Debug\"
+-trace "D:\lldevtools\developers\mshields\IL2JS\bin\Debug\il2jsc.trace"
+-skipUpToDate

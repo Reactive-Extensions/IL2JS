@@ -1,0 +1,7 @@
+-debug
+-breakOnBreak
+-clrArraySemantics
+-clrNullVirtcallSemantics
+-clrInteropExceptions
+-safeInterop
+@$IL2JSROOT\MSBuild\il2jsc.common.opts

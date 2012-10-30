@@ -1,0 +1,143 @@
+              <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+                <PropertyGroup>
+                  <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+#IL2JS#           <Platform Condition=" '$(Platform)' == '' ">Plain</Platform>
+#WSH#             <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+                  <ProductVersion>8.0.50727</ProductVersion>
+                  <SchemaVersion>2.0</SchemaVersion>
+                  <ProjectGuid>{%GUID%}</ProjectGuid>
+#IL2JS#           <ProjectTypeGuids>{A1591282-1198-4647-A2B1-27E5FF5F6F3B};{fae04ec0-301f-11d3-bf4b-00c04f79efbc}</ProjectTypeGuids>
+#WSH#             <IL2JSGenerateJavaScript>false</IL2JSGenerateJavaScript>
+                  <OutputType>%OUTPUT%</OutputType>
+#IL2JS#           <TargetFrameworkIdentifier>Silverlight</TargetFrameworkIdentifier>
+#IL2JS#           <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+#IL2JS#           <SilverlightVersion>$(TargetFrameworkVersion)</SilverlightVersion>
+#IL2JS#           <SilverlightApplication>true</SilverlightApplication>
+                  <AssemblyName>IL2JS_Tests_%NAME%_%TARGET%</AssemblyName>
+                  <FileAlignment>512</FileAlignment>
+                  <RootNamespace>Microsoft.LiveLabs.JavaScript.Tests</RootNamespace>
+#IL2JS#           <IL2JSGenerateStartPage>false</IL2JSGenerateStartPage>
+                  <IL2JSROOT Condition=" '$(IL2JSROOT)' == '' ">$(Registry:HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\IL2JS@Root)</IL2JSROOT>
+                  <IL2JSROOT Condition=" '$(IL2JSROOT)' == '' ">$(Registry:HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\IL2JS@Root)</IL2JSROOT>
+                </PropertyGroup>
+#WSH#           <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+#WSH#             <DebugSymbols>true</DebugSymbols>
+#WSH#             <DebugType>full</DebugType>
+#WSH#             <Optimize>false</Optimize>
+#WSH#             <DefineConstants>DEBUG;TRACE;%TARGET%</DefineConstants>
+#WSH#             <ErrorReport>prompt</ErrorReport>
+#WSH#             <WarningLevel>4</WarningLevel>
+#WSH#             <OutputPath>bin\Debug\</OutputPath>
+#WSH#             <PlatformTarget>x86</PlatformTarget>
+#WSH#           </PropertyGroup>
+#WSH#           <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+#WSH#             <DebugType>pdbonly</DebugType>
+#WSH#             <Optimize>true</Optimize>
+#WSH#             <DefineConstants>TRACE;%TARGET%</DefineConstants>
+#WSH#             <ErrorReport>prompt</ErrorReport>
+#WSH#             <WarningLevel>4</WarningLevel>
+#WSH#             <OutputPath>bin\Release\</OutputPath>
+#WSH#             <PlatformTarget>x86</PlatformTarget>
+#WSH#           </PropertyGroup>
+#IL2JS#         <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|Plain' ">
+#IL2JS#           <DebugSymbols>true</DebugSymbols>
+#IL2JS#           <DebugType>full</DebugType>
+#IL2JS#           <Optimize>false</Optimize>
+#IL2JS#           <DefineConstants>DEBUG;TRACE;%TARGET%</DefineConstants>
+#IL2JS#           <ErrorReport>prompt</ErrorReport>
+#IL2JS#           <WarningLevel>4</WarningLevel>
+#IL2JS#           <OutputPath>bin\DebugPlain\</OutputPath>
+#IL2JS#           <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+#IL2JS#         </PropertyGroup>
+#IL2JS#         <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|Collecting' ">
+#IL2JS#           <DebugSymbols>true</DebugSymbols>
+#IL2JS#           <DebugType>full</DebugType>
+#IL2JS#           <Optimize>false</Optimize>
+#IL2JS#           <DefineConstants>DEBUG;TRACE;%TARGET%</DefineConstants>
+#IL2JS#           <ErrorReport>prompt</ErrorReport>
+#IL2JS#           <WarningLevel>4</WarningLevel>
+#IL2JS#           <OutputPath>bin\DebugCollecting\</OutputPath>
+#IL2JS#           <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+#IL2JS#         </PropertyGroup>
+#IL2JS#         <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|Traced' ">
+#IL2JS#           <DebugSymbols>true</DebugSymbols>
+#IL2JS#           <DebugType>full</DebugType>
+#IL2JS#           <Optimize>false</Optimize>
+#IL2JS#           <DefineConstants>DEBUG;TRACE;%TARGET%</DefineConstants>
+#IL2JS#           <ErrorReport>prompt</ErrorReport>
+#IL2JS#           <WarningLevel>4</WarningLevel>
+#IL2JS#           <OutputPath>bin\DebugTraced\</OutputPath>
+#IL2JS#           <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+#IL2JS#         </PropertyGroup>
+#IL2JS#         <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|Plain' ">
+#IL2JS#           <DebugType>pdbonly</DebugType>
+#IL2JS#           <Optimize>true</Optimize>
+#IL2JS#           <DefineConstants>TRACE;%TARGET%</DefineConstants>
+#IL2JS#           <ErrorReport>prompt</ErrorReport>
+#IL2JS#           <WarningLevel>4</WarningLevel>
+#IL2JS#           <OutputPath>bin\ReleasePlain\</OutputPath>
+#IL2JS#           <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+#IL2JS#           <NoWarn>0626;0169</NoWarn>
+#IL2JS#         </PropertyGroup>
+#IL2JS#         <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|Collecting' ">
+#IL2JS#           <DebugType>pdbonly</DebugType>
+#IL2JS#           <Optimize>true</Optimize>
+#IL2JS#           <DefineConstants>TRACE;%TARGET%</DefineConstants>
+#IL2JS#           <ErrorReport>prompt</ErrorReport>
+#IL2JS#           <WarningLevel>4</WarningLevel>
+#IL2JS#           <OutputPath>bin\ReleaseCollecting\</OutputPath>
+#IL2JS#           <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+#IL2JS#         </PropertyGroup>
+#IL2JS#         <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|Traced' ">
+#IL2JS#           <DebugType>pdbonly</DebugType>
+#IL2JS#           <Optimize>true</Optimize>
+#IL2JS#           <DefineConstants>TRACE;%TARGET%</DefineConstants>
+#IL2JS#           <ErrorReport>prompt</ErrorReport>
+#IL2JS#           <WarningLevel>4</WarningLevel>
+#IL2JS#           <OutputPath>bin\ReleaseTraced\</OutputPath>
+#IL2JS#           <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+#IL2JS#         </PropertyGroup>
+                <ItemGroup>
+#STANDARD#        <Compile Include="..\Common.cs"><Link>Common.cs</Link></Compile>
+#ISBASE#          <Compile Include="..\Common.cs"><Link>Common.cs</Link></Compile>
+                  <Compile Include="Program.cs" />
+                </ItemGroup>
+                <ItemGroup>
+                  <Reference Include="System" />
+                  <Reference Include="System.Core" />
+#IL2JS#           <Reference Include="System.Windows" />
+#IL2JS#           <Reference Include="System.Net" />
+#IL2JS#           <Reference Include="System.Xml" />
+#IL2JS#           <Reference Include="System.Windows.Browser" />
+#IL2JS#           <Reference Include="System.Runtime.Serialization" />
+#IL2JS#           <Reference Include="System.ServiceModel.Web" />
+                </ItemGroup>
+                <ItemGroup>
+#IL2JS#           <ProjectReference Include="$(IL2JSROOT)\JSTypes\IL2JS_JSTypes_silverlight.csproj">
+#IL2JS#             <Project>{A831B585-1833-4EED-BD51-335D39AF87CC}</Project>
+#IL2JS#             <Name>IL2JS_JSTypes_silverlight</Name>
+#IL2JS#           </ProjectReference>
+#IL2JS#           <ProjectReference Include="$(IL2JSROOT)\SilverlightInterop\IL2JS_SilverlightInterop.csproj">
+#IL2JS#             <Project>{7685B8C6-19CF-411B-AFF4-A8699D0ECA3A}</Project>
+#IL2JS#             <Name>IL2JS_SilverlightInterop</Name>
+#IL2JS#           </ProjectReference>
+#WSH#             <ProjectReference Include="$(IL2JSROOT)\JSTypes\IL2JS_JSTypes_wsh.csproj">
+#WSH#               <Project>{E216F71D-E14A-4831-BBD3-88D9007BB620}</Project>
+#WSH#               <Name>IL2JS_JSTypes_wsh</Name>
+#WSH#             </ProjectReference>
+#WSH#             <ProjectReference Include="$(IL2JSROOT)\WSHInterop\IL2JS_WSHInterop.csproj">
+#WSH#               <Project>{177BE4CD-F73A-4798-BC4B-485DC7729D68}</Project>
+#WSH#               <Name>IL2JS_WSHInterop</Name>
+#WSH#             </ProjectReference>
+#REFBASE#         <ProjectReference Include="$(IL2JSROOT)\Tests\%NAME%Base\IL2JS_Tests_%NAME%Base_%TARGET%.csproj">
+#REFBASE#           <Project>{%BASEGUID%}</Project>
+#REFBASE#           <Name>IL2JS_Tests_%NAME%Base_%TARGET%</Name>
+#REFBASE#         </ProjectReference>
+                 </ItemGroup>
+#WSH#           <Import Project="$(MSBuildToolsPath)\Microsoft.CSHARP.Targets" />
+#IL2JS#         <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Silverlight\$(SilverlightVersion)\Microsoft.Silverlight.CSharp.targets" />
+                <Import Project="$(IL2JSROOT)\MSBuild\Microsoft.LiveLabs.JavaScript.IL2JS.targets" />
+                <ProjectExtensions>
+                  <VisualStudio AllowExistingFolder="true" />
+                </ProjectExtensions>
+              </Project>

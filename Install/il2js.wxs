@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="7B99C6FD-60A1-4f25-A84A-DA129821A7DE" Language="1033" Version="0.8.1.0" UpgradeCode="61667AFF-E696-41bc-B956-0BF73CACC184" Name="IL2JS v0.81" Manufacturer="Microsoft Corporation">
+    <Package Compressed="yes" Description="A compiler from MSIL to JavaScript and associated support tools and libraries." Manufacturer="Microsoft Corporation" InstallerVersion="200" InstallPrivileges="elevated" Platform="x86" />
+    <Media Id="1" Cabinet="product.cab" EmbedCab="yes" />
+    <Property Id="ALLUSERS" Value="1" />
+    <Icon Id="_icon_" SourceFile="Logo.ico" />
+    <Property Id="ARPPRODUCTICON" Value="_icon_" />
+    <UI>
+      <ProgressText Action="VS2010Setup" Template="[1]">Visual Studio 2010 is merging resource metadata...</ProgressText>
+    </UI>
+    <InstallExecuteSequence>
+      <Custom Action="VS2010Setup" Before="InstallFinalize"> NOT INSTALLED </Custom>
+    </InstallExecuteSequence>
+    <Condition Message="Prerequisite Microsoft Visual Studio 2010 cannot be found.">VS2010DEVENV</Condition>
+    <PropertyRef Id="VS2010DEVENV" />
+    <PropertyRef Id="VS2010_PROJECTTEMPLATES_DIR" />
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="VS2010_PROJECTTEMPLATES_DIR">
+        <Directory Id="_templates_il2js_" Name="IL2JS">
+          <Component Id="_comp1_" Guid="01D88121-FAC3-4e69-8FAE-EDDAB435C1A8">
+            <File Name="IL2JSApplication.zip" Source="IL2JSApplication.zip" />
+            <File Name="IL2JSLibrary.zip" Source="IL2JSLibrary.zip" />
+          </Component>
+        </Directory>
+      </Directory>
+      <Directory Id="ProgramFilesFolder">
+        <Directory Id="INSTALLLOCATION" Name="IL2JS">
+          <Component Id="_comp2_" Guid="54FB608D-4EC9-4ad5-A2DE-A767739DC6DE">
+            <File Name="Redist.txt" Source="Redist.txt" />
+            <File Name="License.rtf" Source="License.rtf" />
+          </Component>
+          <Directory Id="_bindir_" Name="bin">
+            <Component Id="_comp3_" Guid="79C5C850-E083-44d6-9E69-8F3477CCC5A3">
+              <RegistryKey Root="HKLM" Action="createAndRemoveOnUninstall" Key="SOFTWARE\Microsoft\IL2JS">
+                <RegistryValue Name="Root" Value="[INSTALLLOCATION]" Type="string" />
+              </RegistryKey>
+
+              <File Name="IL2JS_CCI.dll" Source="..\bin\IL2JS_CCI.dll" />
+              <File Name="IL2JS_CST.dll" Source="..\bin\IL2JS_CST.dll" />
+              <File Name="IL2JS_Extras.dll" Source="..\bin\IL2JS_Extras.dll" />
+              <File Name="IL2JS_JST.dll" Source="..\bin\IL2JS_JST.dll" />
+              <File Name="IL2JS_PE.dll" Source="..\bin\IL2JS_PE.dll" />
+              <File Name="IL2JS_Tasks.dll" Source="..\bin\IL2JS_Tasks.dll" />
+              <File Name="il2jsc.exe" Source="..\bin\il2jsc.exe" />
+              <File Name="il2jsp.exe" Source="..\bin\il2jsp.exe" />
+              <File Name="il2jsr.exe" Source="..\bin\il2jsr.exe" />
+              <File Name="jsv.exe" Source="..\bin\jsv.exe" />
+
+              <File Name="IL2JS_Html.dll" Source="..\bin\IL2JS_Html.dll" />
+              <File Name="IL2JS_Xml.dll" Source="..\bin\IL2JS_Xml.dll" />
+              <File Name="IL2JS_mscorlib.dll" Source="..\bin\IL2JS_mscorlib.dll" />
+              <File Name="IL2JS_System.Core.dll" Source="..\bin\IL2JS_System.Core.dll" />
+              <File Name="IL2JS_System.CoreEx.dll" Source="..\bin\IL2JS_System.CoreEx.dll" />
+              <File Name="IL2JS_System.dll" Source="..\bin\IL2JS_System.dll" />
+              <File Name="IL2JS_System.Net.dll" Source="..\bin\IL2JS_System.Net.dll" />
+              <File Name="IL2JS_System.Windows.dll" Source="..\bin\IL2JS_System.Windows.dll" />
+              <File Name="IL2JS_JSTypes_silverlight.dll" Source="..\bin\IL2JS_JSTypes_silverlight.dll" />
+              <File Name="IL2JS_SilverlightInterop.dll" Source="..\bin\IL2JS_SilverlightInterop.dll" />
+            </Component>
+          </Directory>
+          <Directory Id="_msbuildbddir_" Name="MSBuild">
+            <Component Id="_comp4_" Guid="16CDC90D-39A8-4153-A92B-71536759ACD5">
+              <File Name="Microsoft.LiveLabs.JavaScript.IL2JS.targets" Source="..\MSBuild\Microsoft.LiveLabs.JavaScript.IL2JS.targets" />
+              <File Name="il2jsc.common.debug.opts" Source="..\MSBuild\il2jsc.common.debug.opts" />
+              <File Name="il2jsc.common.release.opts" Source="..\MSBuild\il2jsc.common.release.opts" />
+              <File Name="il2jsc.common.opts" Source="..\MSBuild\il2jsc.common.opts" />
+              <File Name="il2jsc.nowarns.opts" Source="..\MSBuild\il2jsc.nowarns.opts" />
+              <File Name="il2jsr.common.opts" Source="..\MSBuild\il2jsr.common.opts" />
+              <File Name="il2jsr.nowarns.opts" Source="..\MSBuild\il2jsr.nowarns.opts" />
+            </Component>
+          </Directory>
+          <Directory Id="_examplesdir_" Name="Examples">
+            <Directory Id="_hellobrowserdir_" Name="HelloBrowser">
+              <Component Id="_comp5_" Guid="58A01320-6753-4b0a-90BD-5D7EBE51DA76">
+                <File Name="App.xaml" Source="..\Examples\HelloBrowser\App.xaml" />
+                <File Name="App.xaml.cs" Source="..\Examples\HelloBrowser\App.xaml.cs" />
+                <File Name="example.js" Source="..\Examples\HelloBrowser\example.js" />
+                <File Name="HelloBrowser.cs" Source="..\Examples\HelloBrowser\HelloBrowser.cs" />
+                <File Name="HelloBrowser.csproj" Source="..\Examples\HelloBrowser\HelloBrowser.csproj" />
+                <File Name="main.html" Source="..\Examples\HelloBrowser\main.html" />
+                <File Name="jquery-1.4.2.js" Source="..\Examples\HelloBrowser\jquery-1.4.2.js" />
+                <File Name="mslogo-1.jpg" Source="..\Examples\HelloBrowser\mslogo-1.jpg" />
+                <File Name="ms_net_rgb_web.jpg" Source="..\Examples\HelloBrowser\ms_net_rgb_web.jpg" />
+                <File Name="i.trace" Source="..\Examples\HelloBrowser\i.trace" />
+                <File Name="Start_il2js.html" Source="..\Templates\IL2JSApplication\Start_il2js.html" />
+                <File Name="Start_silverlight.html" Source="..\Templates\IL2JSApplication\Start_silverlight.html" />
+              </Component>
+              <Directory Id="_hellobrowserpropdir_" Name="Properties">
+                <Component Id="_comp6_" Guid="6DCC6AD5-70A8-44f6-A2AF-28CE24449232">
+                  <File Name="AppManifest.xml" Source="..\Examples\HelloBrowser\Properties\AppManifest.xml" />
+                  <File Name="AssemblyInfo.cs" Source="..\Examples\HelloBrowser\Properties\AssemblyInfo.cs" />
+                </Component>
+              </Directory>
+            </Directory>
+          </Directory>
+        </Directory>
+      </Directory>
+    </Directory>
+    <Feature Id="ProductFeature" Title="IL2JS" Description="A compiler from MSIL to JavaScript and associated support tools and libraries." Display="expand" Level="1" >
+      <ComponentRef Id="_comp1_" />
+      <ComponentRef Id="_comp2_" />
+      <ComponentRef Id="_comp3_" />
+      <ComponentRef Id="_comp4_" />
+      <ComponentRef Id="_comp5_" />
+      <ComponentRef Id="_comp6_" />
+    </Feature>
+    <Condition Message="IL2JS can only be installed in full UI mode.">ProductState = 5 OR UILevel = 5 OR AGREE_TO_LICENSE ~= "YES"</Condition>
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLLOCATION" />
+    <UIRef Id="WixUI_InstallDir" />
+    <Upgrade Id="61667AFF-E696-41bc-B956-0BF73CACC184">
+      <UpgradeVersion Minimum="0.0.0.0" Maximum="0.8.1.0" Property="OLDVERSIONFOUND" MigrateFeatures="yes" IncludeMinimum="yes" />
+    </Upgrade>
+    <InstallUISequence>
+      <FindRelatedProducts Before="LaunchConditions" />
+    </InstallUISequence>
+    <InstallExecuteSequence>
+      <FindRelatedProducts Before="LaunchConditions" />
+      <RemoveExistingProducts After="InstallValidate" />
+    </InstallExecuteSequence>
+    <WixVariable Id="WixUISupportPerMachine" Value="1" />
+    <WixVariable Id="WixUISupportPerUser" Value="0" />
+    <WixVariable Id="WixUILicenseRtf" Value="License.rtf" />
+    <WixVariable Id="WixUIDialogBmp" Value="SetupDialog.bmp" />
+    <WixVariable Id="WixUIBannerBmp" Value="SetupBanner.bmp" />
+  </Product>
+</Wix>

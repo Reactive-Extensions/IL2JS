@@ -1,0 +1,1269 @@
+                                          ------------------
+                                          IL2JS Design Notes
+                                          ------------------
+
+// TODO: no Id on string or value types
+
+
+Terminology
+~~~~~~~~~~~
+
+Higher-kinded type = generic class, before it is instantiated to particular types
+First-kinded type = generic class instantiated to particular types, or non-generic class
+Original first-kinded type = non-generic class
+Polymorphic method = generic method in class, before it is instantiated to particular types
+Monomorphic method = generic method instantiated to particular types, or non-geneneric method
+
+Note that "generic" is often used to refer to both higher-kinded types and their application, so I avoid it.
+
+Notation
+~~~~~~~~
+
+ a -> b   = JavaScript functions which if given argument of type a yield result of type b
+ a |-> b  = JavaScript objects with labels of type a and fields of type b
+ [a]      = JavaScript array with elements of type a
+
+Names
+~~~~~
+
+ - File Name:
+       Characters [a-z0-9. ,=_]. All other characters are escaped as
+       $<shortest base-36 encoding of unicode character code>$.
+ - Assembly Name:
+       The strong assembly name, which includes version, culture and public key token. Eg:
+           "mscorlib, Version=2.0.5.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e"
+       Unique over all assemblies.
+ - Simple type name:
+       Name of type, not including assembly, including namespace and type nesting, and not including
+       any type application.
+ - Type Name:
+       Name of type, not including assembly, but including namespace and type nesting, and
+       possibly including type application argument names.
+        - Eg: If ordinary first-kinded type:
+              "System.Collections.IList"
+        - Eg: If higher-kinded type:
+              "System.Collections.Generic.List`1"
+        - Eg: If type application of higher-kinded type to first-kinded type arguments:
+              "System.Collections.Generic.List`1<[mscorlib, Version=2.0.5.0, Culture=neutral,
+               PublicKeyToken=7cec85d7bea7798e]System.Int32>"
+          (Note that type argument names are qualified type names).
+        - Eg: If built-in array type constructor, which is represented by our own generic type:
+              "Microsoft.LiveLabs.JavaScript.PrimitiveArray`1"
+          (Note only rank-1 arrays are supported)
+      Unique over all types in same assembly.
+ - Qualified type name:
+      Type name prefixed by assembly name. Eg:
+          "[mscorlib, Version=2.0.5.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]System.Int"
+      Unique over all types in all assemblies. The built-in array type constructor pretends to live in mscorlib.
+      Instances of higher-kinded types pretend to live in the same assembly as the higher-kinded type.
+ - Simple method name:
+      What the user writes. Eg: "ToString".
+ - Method name:
+      Simple method name with its argument modifiers and types, and non-void return type (if any). All types
+      are as qualified type names. Eg:
+          "ToString():[mscorlib, Version=2.0.5.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]System.String"
+          "TryParse([mscorlib, Version=2.0.5.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]System.String,
+           out [mscorlib, Version=2.0.5.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]System.Int32):
+           [mscorlib, Version=2.0.5.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]System.Boolean"
+      Constructors have name ".ctor(...)", and static constructors ".cctor(...)".
+      Unique over all members in same type.
+ - Qualified method name:
+      Method name prefixed by it's declaring type in C++ style. Type is as qualified type name. Eg:
+          "[mscorlib, Version=2.0.5.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]System.Int32::ToString():
+           [mscorlib, Version=2.0.5.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]System.String"
+      Unique over all members in all types in all assemblies.
+ - Simple field name:
+      What the user writes. Eg: "MinValue"
+ - Field name:
+      Simple field name with it's type and 'field' modififier. Eg:
+          "field MinValue:[mscorlib, Version=2.0.5.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]System.Int32"
+      Unique over all members in same type.
+ - Qualified field name:
+      As for qualified method names.
+ - Simple event name:
+      What the user writes.
+ - Event name:
+      Simple event name with it's event handler type and 'event' modifier.
+      Unique over all members in same type.
+ - Qualified event name:
+      As for qualified method names.
+ - Simple property name:
+      Whet the user writes.
+ - Property name:
+      Simple property name with it's underlying type and 'property' modifier.
+      Unique over all members in the same type.
+ - Qualified property name:
+      As for qualified method names.
+ - Simple member name:
+      A simple method, field, event or property name.
+ - Member name:
+      A method, field, event or property name. Unique over all members in same type.
+ - Qualified member name:
+      A qualified method, field, event or property name. Unique over all members in all types in all assemblies.
+ - Slot name:
+      A slot is a location in an assembly, type or instance structure who's field name is invented by the compiler
+      or a combination of the compiler and run-time ids. They are used to hold shared strings, types, type
+      builder functions, type instantiator functions, methods, method builder functions, interface methods,
+      event rendevous and fields. We describe them as we go.
+
+File layout
+~~~~~~~~~~~
+
+All files bind 'LLDTIt' to a one-arg function which, when applied to the root structure, binds the loaded
+information into the root structure where appropriate. When operating in client/server mode, the server is
+free to piggy-back bindings for any assemblies, types and methods within the response to any request.
+
+    <assembly name>/assembly.js                      (* Binds assembly structure into AssemblyCache *)
+    <assembly name>/assembly.txt                     (* Contains strong name of assembly *)
+    <assembly name>/typeNameMap.js                   (* Binds the TypeNameToFileName field in assembly structure *)
+    <assembly name>/Types/<type name>.js             (* Binds type structure (initialized to phase 1 only) into
+                                                        TypeCache of assembly structure *)
+    <assembly name>/Reflection/<type name>.js        (* Binds all reflection fields into type structure *)
+
+Object structure
+~~~~~~~~~~~~~~~~
+
+Instance fields have slot names allocated according to their position in a canonical ordering of all instance
+fields of the type, s.t. all derived types allocate the same slot to the same field of base type.
+
+Event rendevous have slot names allocated as for instance fields, but only when the event must interop with
+an existing eventing system (such as in the browser).
+
+Note that properties don't have slots since they are just sugar for getter and setter methods. (Indeed the only
+reason we care about properties in the runtime at all is to support the 'InvokeMember' method of System.Type)
+
+Instances of Nullable<T> and reference types may be null. Instances of value type other than
+Nullable<T> cannot be null.
+
+{
+    <may be an instance of a built-in JavaScript class, or just a JavaScript Object>
+
+    (* In objects of reference type only *)
+    T : <type structure>            (* First-kinded type structure this is an instance of *)
+    Id : int                        (* Unique id for object. Used by GetHashCode and marshalling. *)
+
+    (* In 'Keyed' or 'Proxied' (and thus also reference type) objects only *)
+    Unmanaged : object              (* If object was returned from a JavaScript interop call, the underlying
+                                       JavaScript object. The unmanaged object may contain a "backpointer" to
+                                       this object, or a key which can be mapped to this object. *)
+    PrepareForExport : object -> () (* If defined, to be applied to unmanaged object before it is exported
+                                       for the first time, then reset to undefined. *)
+
+    (* In all objects *)
+    f<instance field slot> : object (* Value of instance field *)
+    e<event slot> : delegate        (* Multicast delegate handling instance event *)
+}
+
+Pointer/box structure
+~~~~~~~~~~~~~~~~~~~~~
+
+Boxed instances of value types and pointers to value types share the same representation. (The CLR similarly
+blurs these representations).
+
+{
+    T : <type structure>    (* As for object, always present *)
+    Id : int                (* As for object, always present *)
+    R : () -> object        (* Read value from pointer *)
+    W : object -> ()        (* Write value to pointer *)
+}
+
+Nullable<T> representation
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Nullable<T> (where, thankfully, the CLR ensures T is a value type which is not itself Nullable) has 
+the same representation as for T, exept that the CLR "no-value" nullable is represented by JavaScript "null".
+
+To summarize values, boxes and nullable:
+
+    CLR Type  CLR Value  JavaScript Value
+    --------  ---------  ----------------
+    int       i          i
+    int?      i          i
+    int?      no-value   null
+
+And to summarize the various coercions between values, boxes and nullable:
+
+    Source CLR Type  Target CLR Type  CLR Conversion   JavaScript Conversion
+    ---------------  ---------------  ---------------  ---------------------
+    int              object           box              new pointer
+    object           int              unbox.any        read pointer
+    int              int?             new Nullable     id
+    int?             int              Nullable::Value  raise on null
+
+Type slots and caching
+~~~~~~~~~~~~~~~~~~~~~~
+
+A type definition is given a slot name based on its position in a canonical ordering of all types defined
+in its containing assembly. (Since the builtin array type constructor does not exist in any assembly,
+we give it the slot name $Array, ie the same as its name).
+
+Assembly structures have bindings for every type defined within them. A first-kinded type:
+
+    class C { ... }
+
+has binding in its assembly structure ('a'):
+
+    (* XREF1069 *)
+    a.b<C's slot> = function(phase) {
+        root.LoadType(a, <C's slot>, <C's name>); (* will self-bind type into assembly *)
+        var t = a.t<C's slot>;
+        a.b<C's slot> = function(phase) { root.EnsurePhase(t, phase); return t; };
+        root.EnsurePhase(t, phase);
+        return t;
+    }
+
+so that C may be resolved by:
+
+    var a = root.A(<C's assembly name>);
+    var c = a.b<C's slot>(3);
+
+A higher-kinded type
+
+    class C<T, U> { ... }
+
+has two bindings, one for the higher-kinded type itself:
+
+    (* XREF1091 *)
+    a.c<C's slot> = function() {
+        root.LoadType(a, <C's slot>, <C's name>); (* will self-bind type into assembly *)
+        var t = a.t<C's slot>;
+        a.c<C's slot> = function() { return t; };
+        return t;
+    }
+
+and one for building instances of that type:
+
+    (* XREF1087 *)
+    a.b<C's slot> = function(phase, <T's param>, <U's param>) {
+        var t = a.c<C's slot>();
+        var slot = root.SlotName("t<C's slot>", [<T's param>, <U's param>]);
+        if (a[slot] == null)
+            a[slot] = t.Instantiate(<T's param>, <U's param>);
+        root.EnsurePhase(a[slot], phase);
+        return a[slot];
+    }
+
+so that C<D, E> may be resolved by:
+
+    var a = root.A(<C's assembly name>);
+    var c = a.b<C's slot>(3, <D's type structure>, <E's type structure>);
+
+(We could do all of the above generically but choose to inline in this way for speed).
+
+Assembly structure
+~~~~~~~~~~~~~~~~~~
+
+
+(* XREF1217 *)
+{
+    T : <type structure>                        (* As for Object. Always System.Reflection.Assembly *)
+    Id : int                                    (* As for Object. *)
+    Name : string                               (* Assembly name *)
+    EntryPoint : () -> ()                       (* Entry point function if any, otherwise undefined *)
+    TypeNameToSlotName : string |-> string      (* Map qualified type names (without type arguments) to
+                                                   their slot names (without any "b", "h" or "t" prefix) *)
+    Initialize : () -> ()                       (* If not yet initialized, call the assemblies <Module>::.cctor
+                                                   method, then bind exported static methods and constructors of
+                                                   assembly. Otherwise, is undefined. *)
+    a<assembly slot> : () -> <assembly struct>  (* Load (at most once) and return assembly structure
+                                                   corresponding to slot name *)
+    b<type slot> : int -> <type structures> -> <type structure>
+                                                (* Build instance of type to phase with slot name at given
+                                                   type arguments at most once. *)
+    c<type slot> : () -> <type structure>       (* Build (at most once) higher-kinded type. *)
+    t<type slot> : <type structure>             (* Cached type (first- or higher-kinded) with slot name *)
+    t<type slot>_n_m : <type structure>         (* Cached instance of higher-kinded type with slot name over
+                                                   types with Id's n and m (and so on) *)
+    (* Only bound if files are local *)
+    TypeNameToFileName : string |-> string      (* Map from type names defined in assembly to filename containing
+                                                   JavaScript which, when loaded, adds the type to the assembly
+                                                   structure. *)
+}
+
+
+Assembly loading functions
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+All referenced assemblies are loaded at most once using self-updating functions:
+
+    a.a<assembly slot> = function() {
+                             var b = <root>.ResolveAssembly(<assembly strong name>);
+                             a.a<assembly slot> = function() { return b; };
+                             return b;
+                         };
+
+Method definition slots and caching
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A method definition is given a slot name based on its position in a canonical ordering of all methods
+defined in its containing type s.t. all derived types allocate the same slot to the same method in a base
+type.
+
+Methods are subject to lots of duplicated work:
+ 1. A method may be in a higher-kinded type, and that type may be intantiated multiple times at the same types
+     => Type applications are cached within the assembly structure
+ 2. A polymorphic method may be instantiated multiple times at the same types
+     => Type specializations are cached within the type structure
+ 3. A method may have multiple call sites
+     => The final method value (ie a plain-old JavaScript function) is captured within the
+        closure containing the call site. The construction of that method is cached within the
+        type structure (ie even monomorphic methods are treated as being "polymorphic over zero type arguments").
+ 4. A method may be callable via multiple names if it implements one or more interface methods
+     => We must take care that any caching done above also applies to these synonyms
+ 5. A method may be called multiple times with the same arguments
+     => We don't interfere there
+
+While constructing these caches we also have to watch out for recursion. Recursive types are handled by phased
+type loading, described below. Recursive methods are handled by breaking the cycle (at run-time) with an extra
+indirection thunk, which is simply the eta-expansion of the value-part of the method.
+
+Some of the following is more complicated than necessary to pave the way for downloading at the granularity
+of methods rather than types. (However more work is needed.)
+
+** Case 1. Higher-kinded type, polymorphic method **
+
+Given definition:
+
+    interface I<X> { void N<Y>(X x, Y y); }
+    class C<T, U> : I<T> {
+        void M<V, W>(T t, U u, V v, W w) { (* body of M *) }
+        void N<V>(T t, V v) { (* body of N *) }
+    }
+
+the type structure for type constructor C has binding:
+
+  (* XREF1367 *)
+  var a = <C's type structure>
+  a.b<M's slot> = function(b, <V's param>, <W's param>) {
+                      (* b holds structure for C<T, U> *)
+                      var <T's param> = b.Arguments[0];
+                      var <U's param> = b.Arguments[1];
+                      (* resolve assemblies *)
+                      (* resolve types needed by body of M w.r.t. type args *)
+                      (* resolve methods needed by body of M w.r.t. above types *)
+                      return function(t, u, v, w) { (* body of M *) };
+                  }
+  a.b<N's slot> = (* as above but for N *)
+
+and the (runtime constructed) type structure for type C<D, E> has binding:
+
+  (* XREF1381 *)
+  var a = <C<D, E>'s type structure>
+  a.b<M's slot> = function(<V's param>, <W's param>) {
+                      var slot = root.SlotName("m<M's slot>", <V's param>, <W's param>);
+                      var f = a[slot];
+                      if (f == null) {
+	                      a[slot] = function(t, u, v, w) { return a.b<M's slot>(<V's param>, <W's param>)(t, u, v, w); };
+                          f = a.Applicand.b<M's slot>(a, <V's param>, <W's param>);
+                          a[slot] = f;
+                      }
+                      return f;
+                  }
+  var f = (* as above but for N *)
+  a.b<N's slot> = f;
+  a.b<I::N's slot>_<T param's id> = f;
+
+Thus the call:
+
+    C<D, E> c;
+    c.M<F, G>(1, true, null, 2);
+
+becomes:
+
+   var a = <C's assembly>;
+   var b = a.b<C's slot>(3, <D's type structure>, <E's type structure>); (* build type *)
+   var c = b.b<M's slot>(<F's type structure>, <G's type structure>); (* build method *)
+   c(1, true, null, 2); (* method call *)
+
+** Case 2. Higher-kinded type, monomorphic method **
+
+Given definition:
+
+    interface I<X> { void N(X x) }
+    class C<T, U> : I<T> {
+        void M(T t, U u) { (* body of M *) }
+        void N(T t) { (* body of N *) }
+    }
+
+the type structure for type constructor C has binding:
+
+  (* XREF1373 *)
+  var a = <C's type structure>
+  a.b<M's slot> = function(b) {
+                      (* b holds structure for C<T, U> *)
+                      var <T's param> = b.Arguments[0];
+	                  var <U's param> = b.Arguments[1];
+                      (* resolve assemblies *)
+                      (* resolve types needed by body of M w.r.t. type args *)
+                      (* resolve methods needed by body of M w.r.t. above types *)
+                      return function(t, u) { (* body of M *) };
+                  }
+  a.b<N's slot> = (* as above but for N *)
+
+and the (runtime constructed) type structure ('a') for type C<D, E> has binding:
+
+  (* XREF1399 *)
+  var a = <C<D, E>'s type structure>
+  a.b<M's slot> = function() {
+	                  a.b<M's slot> = function() { return function(t, u) { return a.b<M's slot>()(t, u); }; };
+                      var f = a.Applicand.b<M's slot>(a);
+                      a.m<M's slot> = f;
+                      a.b<M's slot> = function() { return f; };
+                      return f;
+                  }
+  a.b<N's slot> = (* as above but for N *);
+  a.b<I::N's slot>_<T param's id> = function() {
+                                        var f= a.b<N's slot>();
+                                        a.b<I::N's slot>_<T param's id> = function() { return f; };
+                                        return f;
+                                    }
+
+Thus the call:
+
+    C<D, E> c;
+    c.M(1, true);
+
+becomes:
+
+   var a = <C's assembly>;
+   var b = a.b<C's slot>(3, <D's type structure>, <E's type structure>); (* build type *)
+   var c = b.b<M's slot>(); (* build method *)
+   c(1, true); (* method call *)
+
+** Case 3. First-kinded type, polymorphic method **
+
+Given definition:
+
+    interface I { N<Y>(Y y) }
+    class C : I {
+        void M<V, W>(V v, W w) { (* body of M *) }
+        void N<V>(V v) { (* body of N *) }
+    }
+
+then the type structure for C has binding:
+
+  (* XREF1409 *)
+  var a = <C's type structure>
+  a.b<M's slot> = function(<V's param>, <W's param>) {
+                      var slot = root.SlotName("m<M's slot>", [<V's param>, <W's param>]);
+                      var f = a[slot];
+                      if (f == null) {
+	                      a[slot] = function(v, w) { return a.b<M's slot>(<V's param>, <W's param>)(v, w); };
+                          (* resolve assemblies *)
+                          (* resolve types needed by body of M w.r.t. type args *)
+                          (* resolve methods needed by body of M w.r.t. above types *)
+                          f = function(v, w) { (* body of M *) };
+                          a[slot] = f;
+                      }
+                      return f;
+                  }
+  var f = (* as above but for N *)
+  a.b<N's slot> = f;
+  a.b<I::N's slot> = f;
+
+Thus the call:
+
+    C c;
+    c.M<D, E>(null, 2);
+
+becomes:
+
+   var a = root.A(<C's assembly>); (* resolve assembly *)
+   var b = a.b<C's slot>(3); (* build type *)
+   var c = b.b<M's slot>(<D's type structuer>, <E's type structure>); (* build method *)
+   c(null, 2); (* method call *)
+
+** Case 4. First-kinded type, monomorphic method **
+
+Given definition:
+
+    interface I { N(int t) }
+    class C {
+        void M(int t, bool u) { (* body of M *) }
+        void N(int t) { (* body of N *) }
+    }
+
+then the type structure for C has binding:
+
+  (* XREF1423 *)
+  var a = <C's type structure>
+  a.b<M's slot> = function() {
+                      a.b<M's slot> = function() { return function(t, u) { return a.b<M's slot>()(t, u); }; };
+                      (* resolve assemblies *)
+                      (* resolve types needed by body of M *)
+                      (* resolve methods needed by body of M *)
+                      var f = function(t, u) { (* body of M *) };
+                      a.m<M's slot> = f;
+                      a.b<M's slot> = function() { return f; };
+                      return f;
+                  }
+  a.b<N's slot> = (* as above but for N *)
+  a.b<I::N's slot> = function() {
+                         var f= a.b<N's slot>();
+                         a.b<I::N's slot> = function() { return f; };
+                         return f;
+                     }
+
+Thus the call:
+
+    C c;
+    c.M(1, true);
+
+becomes:
+
+   var a = root.A(<C's assembly>); (* resolve assembly *)
+   var b = a.b<C's slot>(3); (* build type *)
+   var c = b.b<M's slot>(); (* build method *)
+   c(1, true); (* method call *)
+
+
+Virtual calls
+~~~~~~~~~~~~~
+
+Virtual calls to non-virtual methods don't require anything special from method layout.
+
+Virtual calls to virtual methods must be resolved each time via the object's type. If the virtual method
+is polymorphic then the call may simply "build" the method (by applying the type args) and "call" it
+(by applying the value args) in place. However, if the virtual method is monomorphic we'd like to avoid
+this double application since it can't be amortized over any other calls. We bind a special field in the
+type for this purpose.
+
+For example given:
+    class C<T> {
+        virtual void M<U>(T t, U u) { (* body of M *) }
+        virtual void N(T t) { (* body of N *) }
+    }
+then C and C<T> have bindings for M as described above, an a virtual call to M looks like:
+
+    <instance>.T.b<M's slot>(<type for U>)(<value for t>, <value for u>)
+
+C and C<T> also have binding for N as described above (since "virtual" methods may still be called
+via a normal call), but also have the additional "direct call" binding:
+
+    (* XREF1427 *)
+    var a = <C<T>'s type structure>;
+    a.v<N's slot> = function(t, u) {
+                        var f = a.b<N's slot>();
+                        a.v<N's slot> = f;
+                        return f(t, u);
+                    }
+
+and a virtual call to N looks like:
+
+    <instance>.T.v<N's slot>(<value for t>, <value for u>)
+
+Inherited virtual methods
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+We must copy the implementation of inherited methods from the supertype into the derived type.
+For polymorphic methods it is ok to copy the supertype's method builder, since it never changes
+and there's no problem the monomorphic instance cache living in the supertype structure. However
+monomorphic methods on the supertype will self-update. Hence the derived type method must be
+prepared to do the same. Eg if 'a' is supertype structure and 'b' derived type structure, we have:
+
+    (* XREF1433 *)
+    b.b<M's slot> = function() {
+                       var f = a.b<M's slot>();
+                       b.b<M's slot> = function() { return f; };
+                       return f;
+                    }
+
+Since M is virtual it will also end up with a direct call binding as above, except that
+we can go directly to the supertype builder:
+
+    (* XREF1429 *)
+    b.v<M's slot> = function(t, u) {
+                        var f = a.b<N's slot>();
+                        a.v<N's slot> = f;
+                        return f(t, u);
+                    }
+
+
+Interface method slots
+~~~~~~~~~~~~~~~~~~~~~~
+
+Interface methods have slot names allocated using a combination of compile-time and run-time type names.
+To illustrate, consider the definitions:
+
+    interface I<T> {
+       int M<U>(T t, U u);                       (* DEFN 1 *)
+    }
+
+    class C<V, W> : I<List<V>>, I<List<W>>, I<HashSet<V>> {
+        int M<X>(List<V> t, X u) { return 2; }    (* DEFN 2 *)
+        int M<Y>(List<W> t, Y u) { return 3; }    (* DEFN 3 *)
+        int M<Z>(HashSet<V> t, Z u) { return 4; } (* DEFN 4 *)
+    }
+
+and the code fragment:
+
+    var c = new C<bool, char>();
+    c.M<string>(default(List<bool>), null);       (* REF 1, returns 2 *)
+    var i1 = (I<List<bool>>)c;
+    i1.M<string>(null, null);                     (* REF 2, returns 2 *)
+    var i2 = (I<List<char>>)c;
+    i2.M<string>(null, null);                     (* REF 3, returns 3 *)
+    var i3 = (I<HashSet<bool>>)c;
+    i3.M<string>(null, null);                     (* REF 4, returns 4 *)
+
+(We use C# systax, but actually these must be written in IL since the C# compiler rejects the
+definition of class C)
+
+Then we have eight names for method 'M' (using [...] to abbreviate the relevant assembly name):
+
+    (* (1) Name of M as appears in scope of I [!0 |-> T, !!0 |-> U] *)
+    [...]I::M<[1]>(!0, !!0):int
+    (* (2) Interface method DEFN 2 implements, as appears in scope of C [left !0 |-> V, right !0 |-> T, !!0 |-> U]*)
+    [...]I<[...]List<!0>>::M<[1]>(!0, !!0):int
+    (* (3) Interface method DEFN 3 implements, as appears in scope of C [!1 |-> W, !0 |-> T, !!0 |-> U] *)
+    [...]I<[...]List<!1>>::M<[1]>(!0, !!0):int
+    (* (4) Interface method DEFN 4 implements, as appears in scope of C [left !0 |-> V, right !0 |-> T, !!0 |-> U]*)
+    [...]I<[...]HashSet<!0>>::M<[1]>(!0, !!0):int
+    (* (5) Class method DEFN 2, as appears at REF 1 [!0 |-> V, !!0 |-> X] *)
+    [...]C<bool, char>::M<string>([...]List<!0>, !!0):int
+    (* (6) Interface method DEFN 1, as appears at REF 2 [!0 |-> T, !!0 |-> U] (resolves to DEFN 2) *)
+    [...]I<[...]List<bool>>::M<string>(!0, !!0):int
+    (* (7) Interface method DEFN 1, as appears at REF 3 [!0 |-> T, !!0 |-> U] (resolves to DEFN 3) *)
+    [...]I<[...]List<char>>::M<string>(!0, !!0):int
+    (* (8) Interface method DEFN 1, as appears at REF 4 [!0 |-> T, !!0 |-> U] (resolves to DEFN 4) *)
+    [...]I<[...]HashSet<bool>>::M<string>(!0, !!0):int
+
+When C is instantiated with type arguments bool and char, it must fill in the slots for M using names in
+the form of (6), (7) and (8). Separate compilation and polymorphic recursion make it impossible to
+canonically order all interface methods at compile time. Instead, we construct those slot names at
+run-time as concatenation of:
+ - the SHA1 hash of the interface method name in form (1) (to distiguish the implemented interface
+   method from other methods of same interface, and methods of other interfaces)
+ - the ids of interface type arguments, prefixed by '_' (to distinguish the same interface method
+   implemented over multiple instances)
+
+Note that the verifier rejects instances of C over the same types, so we don't need to worry about
+ambiguous interface method slot names or ambiguous casts.
+
+Interface methods are built, cached and called just as for non-interface methods except for the
+change in slot name construction. In particular, an interface method may be called virtually or normally,
+and thus needs the same "direct call" provision as above if monomorphic. Since method slot names are 
+very short (eg "xy") while interface method slot names are somewhat long (eg "izPFy03ZqmzG1Pzlyp1oBESR1ejrRj2")
+we don't have to worry about them clashing. Note that a polymorphic interface method of a higher-kinded interface
+type will end up with two groups of _n_m style suffixes: the first to capture the interface type argument
+instantiation, and the second the method type arguments instantiation.
+
+
+Type structure
+~~~~~~~~~~~~~~
+
+Static fields have slot names allocated according to their position in a canonical ordering of all static
+fields in the type, s.t. all derived types allocate the same slot to the same field of base types.
+
+(* XREF1063 *)
+{
+    (* Common to higher- and first-kinded types *)
+    T : <type structure>                       (* As for Object.
+                                                  Always Microsoft.LiveLabs.JavaScript.Reflection.JSType *)
+    Id : int                                   (* As for Object. Used by internal caches. *)
+    Assembly : <assembly structure>            (* Containing assembly. Undefined for array types. *)
+    Name : string                              (* Type name. If higher-kinded, will be without type arguments.
+                                                  If instance of higher-kinded, will include type arguments. *)
+    s<string slot> : string                    (* String literal shared between all methods of type *)
+
+    (* In higher-kinded types only *)
+    Instantiate : <type structures> -> <type structure>
+                                               (* Return the first-kinded type structure representing this
+                                                  type applied to the given first-kinded type arguments. *)
+
+    (* In first-kinded types only *)
+    Lowers: [int]                              (* If multi-dimensional array, lower bounds for each dimension *)
+    Sizes: [int]                               (* If multi-dimensional array, sizes for each dimension *)
+    Applicand : <type structure>               (* If instance of (non built-in array) higher-kinded type,
+                                                  that higher-kinded type structure. Otherwise undefined. *)
+    Arguments : [<type structure>]             (* If instance of higher-kinded type or built-in array type, the
+                                                  type arguments for that type. Otherwise undefined. *)
+    Supertypes : string |-> bool               (* The map from qualified type names to 'true' if immediate base
+                                                  type, 'false' if super-type but not immediate base type,
+                                                  or undefined in neither. *)
+    AssignableToCache : int |-> bool           (* Map from type id to 'true' if this type is assignable to the
+                                                  type with given id, 'false' if not, or undefined if not yet
+                                                  known. This map is used to cache calls to IsAssignableTo. *)
+    InitializeTypeSlots : () -> ()             (* Initialize all the static field and (remaining) method slots
+                                                  of this type. Original definitions are bound in phase 1, since
+                                                  they don't depend on type arguments or the details of parent
+                                                  types. The remaining methods are bound by this function:
+                                                   - Inherited virtuals have their defn copied from the parent
+                                                   - Interface methods may have their slot name constructed at
+                                                     run-time.
+                                                   - Non-interface methods may be constructed by instantiating
+                                                     methods of Applicand.
+                                                  Reset to undefined before called for first time. *)
+    InitializeInheritorsTypeSlots : <type structure> -> ()
+                                               (* Fill all slots for virtual and interface method of type
+                                                  in given type structure, which represents a derived type
+                                                  under construction. Implementation in slots are careful
+                                                  to respect updating. *)
+    FinalizeTypeSlots : () -> ()               (* Clear all the static field and method slots of this type. *)
+    TypeClassifier : string -> object -> string(* If type has a type classifier, a function that given the
+                                                  assembly name of this type and an instance, returns the
+                                                  qualified name of the instance's type or null. *)
+    InvokeStaticConstructor : () -> ()         (* Call the static constructor (if any) for this type, and bind any
+                                                  static exports. Reset to undefined before called for first time. *)
+    DefaultConstructor : () -> object          (* If type has a default constructor, yield new instance.
+                                                  Otherwise raise NotImplemented. *)
+    ImportingConstructor : object -> object -> ()
+                                               (* Invoked default "importing constructor" for type, or undefined
+                                                  if no such constructor. First arg is managed object, second is
+                                                  unmanaged object (which may be wrapped as a JSObject and
+                                                  passed to constructor) *)
+    BindInstanceExports : object -> ()         (* Bind exported instance methods of this type (and supertypes)
+                                                  into given unmanaged instance *)
+    C : object -> object                       (* Clone *)
+    MemberwiseClone : object -> object         (* Return shallow copy of object *)
+    I : <type structure> -> object             (* Instance initializer *)
+    R : object -> object                       (* Read if value type *)
+    U : object -> object                       (* Unbox if value type *)
+    B : object -> object                       (* Box if value type *)
+    A : object -> object                       (* Unbox any *)
+    D : () -> object                           (* Make default value *)
+    O : object -> object                       (* Dereference if not value type *)
+    V : bool                                   (* True if a value type *)
+    IsValidJavaScriptType : string -> bool     (* If a primitive type, the function from type name to true if
+                                                  type is a valid unmanaged representation of primitive type.
+	                                              (Note that System.Boolean may be represented by 'number' or 
+                                                  'boolean', hence this is a function rather than a string.)
+	                                              Otherwise undefined. *)
+    Equals : object -> object -> bool          (* Are given objects equal *)
+    Hash : object -> int                       (* Hash code of given object *)
+    Export : object -> object                  (* Export managed instance of this type to unmanaged instance *)
+    Import : object -> object                  (* Import unmanaged instance which is supposed to derive from this
+                                                  type to managed instance *)
+    Root : <type structure>                    (* Root type for this type, which may be this structure itself. *)
+    GetKeyField : object -> object             (* If root 'Keyed' type, extract the key field from given unmanaged
+                                                  'Keyed' object. Otherwise undefined.
+    SetKeyField : object -> object -> ()       (* If root 'Keyed' type, set the key field of given unmanaged 'Keyed'
+                                                  object. Otherwise undefined. *)                                   
+    KeyToObject : string |-> object            (* If root 'Keyed' type, map from key string of unmanaged 'Keyed'
+                                                  objects to their managed wrappers. Otherwise undefined. *)
+
+    (* In first-kinded types (at phase 2) and higher-kinded types (at phase 1) *)
+    b<method slot> : <type structures> -> function
+                                               (* Builders for methods with originial definitions in type,
+                                                  possibly partially applied to type arguments as
+                                                  described above. *)
+
+    (* In first-kinded types at phase 2 only *)
+    m<method slot> : function                  (* Cached constructed monomorphic methods *)
+    m<method slot>_m_n : function              (* Cached constructed polymorphic methods instantiated to
+                                                  types with Ids m and n (and so on) *)
+    f<static field slot> : object              (* Slot for static field. *)
+    e<event slot> : delegate                   (* Multicast delegate handling static event *)
+
+    (* Common to higher- and original first-kinded types. Only bound after loading reflection data.
+       Never appears in instances of higher-kinded types. *)
+    BindReflection : <type structure> -> <type structures> -> ()
+                                               (* Add to first argument all the reflection fields assuming
+                                                  instantiation of type parameters to remaining arguments
+                                                  (if any) *)
+    (* First-kinded types only. Only bound after invoking BindReflection
+       (on self for original first-kinded types, or on instance for higher-kinded types) *)
+    NameToSlot : string |-> string             (* Map each field and method name (possibly with free type
+                                                  variables) to corresponding slot name. Events and properties
+                                                  have no slots. *)
+    PartialToFullName : string |-> string      (* Map each field and method name (possibly with free type variables)
+                                                  with field or return type forced to be void to actual field or
+                                                  method name. *)
+    SimpleToFullName : string |-> string       (* Map each simple member name (including events and properties)
+                                                  to the corresponding actual member name (possibly with free
+                                                  type variables), or null if multiple members share the
+                                                  same simple name.
+    SlotToInfo : string |-> <slot info structure>
+                                               (* Map each method and field slot to its info structure (see below) *)
+    ReflectionName : string                    (* Name used for CLR reflection *)
+    ReflectionFullName : string                (* Name used for CLR reflection *)
+    ReflectionNamespace : string               (* Namespace used for CLR reflection *)
+}
+
+Note that instance methods take "this" as explicit first argument, and do not use the "this" facility of JavaScript.
+
+Slot Info Structure
+~~~~~~~~~~~~~~~~~~~
+
+Extra metadata about methods and fields, to support dynamic invocation.
+
+{
+    IsVirtual : bool              (* Is method a virtual method? Undefined for fields. *)
+    ArgTypes : [<type structure>] (* Argument types, if any. Undefined for fields. *)
+    ResultType : <type structure> (* Result type or field type. Undefined for Void result types and constructors *)
+}
+
+(* XREF1249 *)
+Clone ('C' method in type structure)
+~~~~~
+
+Given a JavaScript object:
+ - For ref types (including arrays), return argument
+ - Otherwise, defer to memberwise clone
+
+(* XREF1259 *)
+MemberwiseClone
+~~~~~~~~~~~~~~~
+
+Given a JavaScript object:
+ - For arrays:
+
+    function (oldObj) {
+        var elementType = oldObj.T.Arguments[0];
+        var newObj = new Array(oldObj.length);
+        newObj.T = oldObj.T;
+        newObj.Id = root.NextObjectId++;
+        for (var i = 0; i < oldObj.length; i++)
+            newObj[i] = elementType.C(oldObj[i]);
+        return newObj;
+    }
+
+ - For all other ref types, allocate new object, bind type and id, and clone each field.
+ - For nullable, if null return null, otherwise clone inner value
+ - For structures, allocate new object (without type or id) and clone each field.
+ - For primitives, return argument
+
+
+(* XREF1277 *)
+Instance initializers ('I' method in type structure)
+~~~~~~~~~~~~~~~~~~~~~
+
+Given a type, return a plain JavaScript object with all fields bound and set to appropriate default values.
+
+ - For ref types:
+    - For Object, invoke 'NewObject', which sets up the T and Id fields.
+    - If A derives from B then initializer for A looks like:
+         function (type) {
+             var t = <type structure for B>;
+             var obj = t.I(type);
+             obj.field_of_A = ...;
+             ...
+             return obj;
+         }
+    - Delegates and Arrays initialize to defaults
+    - Strings initialize as the empty JavaScript string
+ - For value types:
+    - For nullable, return null, since that represents the default 'no-value' nullable
+    - For numbers and enums:
+         These will be initialized in-place. Only locations of unknown type must defer to the initializer function,
+         which looks like:
+            function (type) {
+                return ...A's default value ...
+            }
+    - For structs, the initializer allocates a structure (without T or Id fields) and fills in the structure
+      fields:
+         function (type) {
+             var obj = NewStruct(type);
+             obj.field_of_A = ...;
+             ...
+             return obj;
+         }
+
+(* XREF1279 *)
+Read ('R' method in type structure)
+~~~~
+
+Given a JavaScript object:
+ - For ref types, return argument
+ - For value types, dereference argument pointer and clone underlying value
+
+(* XREF1283 *)
+Unbox ('U' method in type structure)
+~~~~~
+
+In the CLR 'unboxing' takes a boxed value object and returns a managed pointer to the value inside the box.
+ - If expected value type is Nullable<T>:
+    - If box is null, return a pointer to a new "no-value" Nullable<T>.
+    - Otherwise if box is not of T, throw InvalidCastException.
+    - Otherwise return pointer to a new Nullable<T> containing value inside box.
+ - For all other expected value types T:
+    - If the box is null then throw NullReferenceException.
+    - If the box is not of type T then throw InvalidCastException.
+    - Otherwise return pointer to value inside box.
+
+In the JavaScript runtime boxed values and value pointers have the same representation, and Nullable<T> is
+represented as for T but with null representing "no-value". Thus given a JavaScript object:
+ - If expected type is reference type, return object.
+ - If expected value type is Nullable<T>:
+    - If object is null return pointer to null.
+    - Otherwise check type and return object.
+ - For all other expected value types, check for null and type, and return object.
+
+(* XREF1289 *)
+Box ('B' method in type structure)
+~~~
+
+In the CLR 'boxing' takes a value type and wraps it in a box.
+ - If value type is Nullable<T>:
+    - If is "no-value" nullable, return null box.
+    - Otherwise return box of nullable value.
+ - Otherwise return box of value.
+
+In the JavaScript runtime, given an object:
+ - If type is refererence type, return object.
+ - If type is Nullable<T>:
+    - If object is null, return null.
+    - Otherwise return pointer to clone of value of type T.
+ - For all other value types, return pointer to clone of value.
+
+(* XREF1291 *)
+UnboxAny ('A' method in type structure)
+~~~~~~~~
+
+In the CLR this operation is indended to be safe inverse of 'boxing', or a variation of 'unbox' which yields
+the boxed value itself rather than a pointer to the boxed value.
+
+In the JavaScript runtime, given a JavaScript object:
+ - If expected type is a reference type, castclass object to expected type (which implies null goes to null).
+ - If expected type is Nullable<T>:
+    - If object is null return null.
+    - Otherwise check type and return clone of contents of pointer.
+ - For all other value types:
+    - If object is null throw.
+    - Otherwise check type and return clone of contents of pointer.
+
+(* XREF1297 *)
+DefaultValue ('D' method in type structure)
+~~~~~~~~~~~~
+
+In the CLR, the default value for any type is bitwise zero of the required width.
+
+In the JavaScript runtime we need a function of no arguments which returns a (fresh) default value for
+every field of the type:
+ - For ref types, return null.
+ - For value types, return initialized value for this type
+
+Note that we must be carefull never to share default values for structures lest we introduce unintended aliasing.
+
+(* XREF1301 *)
+Constrained ('O' method in type structure)
+~~~~~~~~~~~
+
+In the CLR, invoking a method of an instance who's type is a type paramater T must be done using a 'constrained'
+virtual call. If T is bound to a reference type, the 'this' argument is a pointer to an object, and so must be
+dereferenced. If T is bound to a value type, the 'this' argument is a pointer to a value. If the invoked method
+is virtual or an interface method, the pointer must be replaced by a box (which implies a clone of the underlying
+value, however that should be unobservable in the CLR). Otherwise the pointer can be left as is. Note that these rules
+treat Nullable<T> as an ordinary structure.
+
+In the JavaScript runtime, given an object:
+ - If type is reference type, dereference object
+ - Otherwise return object unchanged. We can get away with this because a) pointers and boxes share the same
+   representation; and b) we don't really need to clone the underlying value if invoking a virtual or interface
+   method, since none of these mutate their instance.
+
+(* XREF1303 *)
+IsValueType ('V' field in type structure)
+~~~~~~~~~~~
+
+Boolean indicating if type is for a value type.
+
+(* XREF1439 *)
+Equals
+~~~~~~
+
+Given two objects:
+ - For reference types, defer to System.Object::Equals virtual method.
+ - For value types, assume arguments both have this type as their type, and are passed as values:
+    - For Nullable<T>, check for null first and second arguments. If both are non-null, compare according to T.
+    - For all other value types, recursively compare fields pairwise
+
+(* XREF1447 *)
+Hash
+~~~~
+
+Given an object:
+ - For reference types, defer to System.Object::GetHashCode virtual method.
+ - For value types, assume argument has this type as its type and is passed as a value.
+    - For Nullable<T>, return zero if argument is null, otherwise return hash of value according to T.
+    - For all other value types, recursively compute hash of each field and combine.
+
+Type Construction Phases
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+To avoid infinite recursion we construct first-kinded types in three phases. To motivate, consider this example:
+
+    public interface IX<T> { int M(T t); }
+    public class A<T> : List<A<A<T>>>, IX<B> {
+        private static B theB;
+        static A() { theB = new B(); }
+        public int M(B b) { return 1; }
+    }
+    public class B : IX<A<B>> {
+        private static A<B> theA;
+        static B() { theA = new A<B>(); }
+        public int M(A<B> a) { return 2; }
+    }
+
+ - Phase 1: The type structure is allocated and assigned a fresh id, and all properties other than
+            static field slots and method slots are set. When we construct the Name and Supertypes properties we
+            must be carefull to build type names without requiring those types to be constrcted at all, even just
+            to phase 1.
+            In our example, A<T> has List<A<A<T>> as supertype, but attempting to construct that type in phase 1
+            would result in infinite regress.
+
+ - Phase 2: The method slot properties are set, and the field slot properties are initialized to the default values
+            of their respective types. This has two subtleties:
+             - Inherited virtual method implementations must be copied from the base type into the type under
+               construction. However, we must be carefull to construct the base type only to phase 2, and if the
+               base type is a type application then the type arguments must be constructed only to phase 1. In our
+               example, the implementation of ToString in List<A<A<T>> needs to be copied into the corresponding
+               slot within A<T>, but attempting to apply List to A<A<T>> in anything beyond phase 1 would result in
+               infinite regress.
+             - Methods of instances of higher-kinded interface types have their slot names constructed at runtime by
+               combining the hash of the qualified method name in the higher-kinded interface with the id's of type
+               arguments. We must be carefull to construct those argument types only to phase 1. In our example, the
+               slot name for A<T>::M(B b) needs the id for B, and the slot name for B::M(A<B> a) needs the id for
+               A<T>. Attempting to construct those types to anything beyond phase 1 would result in infinite
+               regress.
+
+ - Phase 3: The type initializer is invoked at most once, which in turn will invoke any static constructor. The CLR
+            spec only guarantees that static initializers are invoked at most once some time between the loading of
+            the type and it's first access to static members (if beforefieldinit is set) or any members (otherwise).
+            It does not require the runtime to detimine a sane order of initialization, or even check if any such
+            order exists. During initialization we may require a type at phase 3, which may trigger initialization,
+            which may require the current type to be in phase 3. Such cycles are broken simply by black-holing the
+            type initializer before invocation. In our example, A<B> and B each require the other to be fully
+            initialized. However, at runtime one will be initialized before the other, and thus the program may
+            observe that theB or theA are null.
+
+In the above we needed to apply higher-kinded types to type arguments constructed only to phase 1, and it is
+possible that those constructed types may later be required at a later phase. Thus a cached first-kinded type must
+remember the phase it is up to, and only do the work to go from the current phase to the required phase.
+
+Given a first-kinded type structrue, it is at phase 1 if both InitializeTypeSlots and InvokeStaticConstructor are
+defined, phase 2 if only InvokeStaticConstructor is defined, and phase 3 if neither are defined.
+
+
+(* XREF1487 *)
+Constructors
+~~~~~~~~~~~~
+
+Constructors mutate a freshly initialized instance of the constructor type.
+
+ - For ref types:
+    - The constructor for Object is never explicitly invoked.
+    - If A derives from Object and ACtor is not imported then:
+         function ACtor(obj, arg1, ..., argn) {
+             ... assign A fields of obj ...
+         }
+       - If A derives from B and ACtor is not imported then:
+            function ACtor(obj, arg1, ..., argn) {
+	            BCtor(obj, ...);
+                ... assign A fields of obj ...
+            }
+    - If ACtor is imported then generally we have:
+            function ACtor(obj, arg1, ..., argn) {
+                var unmanagedObj = ...result of imported constructor...
+                ... copy fields from unmanagedObj into obj ... 
+            }
+      However see InteropTools/JSInteropAttributeInterpretation/DESIGN.txt for details.
+    - Special ref types are constructed explicitly by the runtime system:
+       - Delegates are represented by JavaScript functions, but with additional fields holding the target object
+         and possibly the underlying single-cast delegates of a multi-cast delegate.
+       - Arrays are represented as JavaScript arrays.
+       - Strings are represented as JavaScript strings.
+ - For value types:
+    - The constructor takes a pointer to an initialized value, and may mutate it is as required.
+         function ACtor(ptr) {
+             ... write constructed value into ptr ...
+         }
+    - Primitive values are constructed as themselves (eg ints)
+
+Initobj
+~~~~~~~
+
+The instruction:
+   initobj A
+with ptr on the stack, is compiled to:
+   ptr.W(<type structure of A>.D()));
+Note that A may be an unknown type, and thus may be bound to a reference type at runtime, in which case
+ptr will be left holding null. (The C# compiler depends on this to implement new T() where T is a type parameter.)
+
+(* XREF1489 *)
+Newobj
+~~~~~~
+
+The instruction:
+   newobj f
+where f is a constructor of A taking n arguments, is compiled to:
+ - If A is a ref type:
+      var t = <type structure of A>;
+      var obj = t.I(t);
+      obj = f(obj, arg1, ..., argn);
+ - If A is a value type:
+      var t = <type structure of A>;
+      var obj = t.I(t);
+      f(NewPointerToVariable(<obj>, t), arg1, ..., argn)
+where obj holds the expression result.
+
+Delegate structure
+~~~~~~~~~~~~~~~~~~
+
+We deliberately collapse single- and multi-cast delegates into one representation since they are
+almost indestinguishable from within the CCI. We represent them as JavaScript functions equivalent
+to Delegate::Invoke for the given delegate type.
+
+{
+    <is a JavaScript function from Invoke arguments to delegate result>
+    T : <type structure>                 (* As for object *)
+    Id : int                             (* As for object *)
+    (* Single-cast delegates only *)
+    Target : object                      (* Target object of instance method, or null if delegate of static method *)
+    Func : arg1 -> ... -> argn -> <method result or void>
+                                         (* Method to invoke. If instance method, above target will be passed as
+                                            first argument, and Invoke arguments passed as remainder. *)
+    (* Multi-cast delegates only *)
+    Multicast : [<delegate structure>]   (* Array (of length >= 2) of single-cast delegate structures. *)
+}
+
+Array structure
+~~~~~~~~~~~~~~~
+
+We don't support higher-ranked arrays or arrays with non-zero bounds. We represent them as JavaScript arrays.
+
+{
+    <is a JavaScript array>
+    T : <type structure>      (* As for object, always an instance of the built-in array type constructor *)
+    Id : int                  (* As for object *)
+}
+
+Interop
+~~~~~~~
+
+See InteropTools\JSInteropAttributeInterpretation\DESIGN.txt
+
+Exception Handling
+~~~~~~~~~~~~~~~~~~
+
+The compiler attempts to reduce the control flow of method to a single basic block with 'structural' instructions.
+However, some difficult control flow may remain:
+ - Leaving multiple protected blocks.
+ - Irreducible loops.
+ - Finally blocks (which have no analog in JavaScript).
+ - Other idiomatic code which needs to be pattern matched to be simplified, but which we havn't gotten to yet. 
+
+In these cases the compiler builds a small state-machine to managed the transitions between basic blocks:
+
+    var state = { PC: <entry block id>, TryStack: [], ContStack: [] };
+    while (true) {
+        try {
+            while (true) {
+                switch (state.PC) {
+                    case <block id>: { <block body with assignment to state, return or throw>; break; }
+                   ... 
+               }
+            } 
+        }
+        catch (ex) {
+            Handle(state, ex);
+        } 
+    }
+
+where:
+
+ - State structure:
+   {
+       PC : int                                 (* Current basic block id *)
+       TryStack : [<try structure]              (* Try blocks entered but not yet left *)
+       ContStack : [<continuation structure>]   (* What to do upon leaving a fault or finally block *)
+   }
+
+ - Try structure:
+   {
+       Handlers : [<handler structure>]
+   }
+
+ - Handler structure:
+   {
+       Style : int                  (* 0 = catch, 1 = fault, 2 = finally *)
+       Target : int                 (* Id of handler entry basic block. If a catch handler, assumes exception object
+                                       has been bound to the appropriate temporary. *)
+       (* If catch handler *)
+       Pred : object -> bool        (* Return true if given exception object matches catch type. If so, as a 
+                                       side effect, bind the object to the temporary used by the catch handler
+                                       to hold the exception. *)
+   }
+
+ - Continuation structure:
+   {
+       Style : int                  (* 0 = leaving a try or catch block, resume poping handlers,
+                                       1 = throwing an exception, resume searching for exception handler *)
+       (* If leaving a try block *)
+       PopCount : int               (* The number of try handlers still to pop *)
+       Target : int                 (* Target to leave to once handlers are popped *)
+       (* If throwing an exception *)
+       Exception : object           (* The exception object we are throwing *)
+   }
+
+ - Helper functions:
+
+        function Handle(state, ex) {
+            state.PC = -1;
+            while (state.PC < 0 && state.TryStack.length > 0) {
+                var t = state.TryStack.pop();
+                if (t.Handlers.length == 1 && t.Handlers[0].Style != 0) {
+                    // execute finally or fault block, then resume looking for handler in outer trys
+                    state.ContStack.push({ Style: 1, Exception: ex });
+                    state.PC = t.Handlers[0].Target;
+                }
+	            else {
+	                for (var i = 0; state.PC < 0 && i < t.Handlers.length; i++) {
+	                    if (t.Handlers[i].Pred(ex)) {
+                            // Put back the try, since the catch is responsible for popping it, and it
+                            // is possible the catch may wish to re-enter the try body
+                            state.TryStack.push(t);
+                            state.PC = t.Handlers[i].Target;
+                        }
+                    }
+                }
+            }
+            if (state.PC < 0)
+                // nothing caught this exception locally, so throw to caller
+	            throw ex;
+        }
+
+	    function LeaveTryCatch(state, popCount, target) {
+            state.PC = target;
+            while (popCount-- > 0) {
+                var t = state.TryStack.pop();
+                if (t.Handlers.length == 1 && t.Handlers[0].Style == 2) {
+                    // execute finally block, then resume popping trys in order to leave
+	                state.ContStack.push({ Style: 0, PopCount: popCount, Target = target });
+                    state.PC = t.Handlers[0].Target;
+                    break;
+                }
+            }
+        }
+
+        function EndFaultFinally(state) {
+            var c = state.ContStack.pop();
+            if (c.Style == 0)
+                // resume trying to leave a try/catch block
+	            LeaveTryCatch(state, c.PopCount, c.Target);
+            else
+                // resume searching for a catch handler
+                Handle(state, c.Exception);
+        }
+
+We compile as follows:
+
+ - bb is a TryBasicBlock:
+
+        state.TryStack.push({ Handlers: [<handler structures>]});
+        state.PC = bb.Body.Id;
+ 
+ - bb is a LeaveTryBasicBlock or LeaveCatchBasicBlock:
+
+        <block body>
+        LeaveTryCatch(state, bb.HandlerPopCount, bb.Target.Id)
+
+ - bb is a EndFaultBasicBlock or EndFinallyBasicBlock:
+
+        <block body>
+        EndFaultFinally(state)
+
+
+
+
+

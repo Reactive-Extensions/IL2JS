@@ -1,0 +1,248 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">Plain</Platform>
+    <ProductVersion>8.0.50727</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{8E912806-310E-47F2-8538-2833165F9DA7}</ProjectGuid>
+    <ProjectTypeGuids>{A1591282-1198-4647-A2B1-27E5FF5F6F3B};{fae04ec0-301f-11d3-bf4b-00c04f79efbc}</ProjectTypeGuids>
+    <OutputType>Library</OutputType>
+    <RootNamespace>
+    </RootNamespace>
+    <AssemblyName>IL2JS_Html</AssemblyName>
+    <TargetFrameworkIdentifier>Silverlight</TargetFrameworkIdentifier>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <SilverlightVersion>$(TargetFrameworkVersion)</SilverlightVersion>
+    <SilverlightApplication>false</SilverlightApplication>
+    <ValidateXaml>true</ValidateXaml>
+    <ThrowErrorsInValidation>true</ThrowErrorsInValidation>
+    <NoWarn>0626</NoWarn>
+    <IL2JSROOT Condition=" '$(IL2JSROOT)' == '' ">$(Registry:HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\IL2JS@Root)</IL2JSROOT>
+    <IL2JSROOT Condition=" '$(IL2JSROOT)' == '' ">$(Registry:HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\IL2JS@Root)</IL2JSROOT>
+  </PropertyGroup>
+  <!-- This property group is only here to support building this project using the 
+       MSBuild 3.5 toolset. In order to work correctly with this older toolset, it needs 
+       to set the TargetFrameworkVersion to v3.5 -->
+  <PropertyGroup Condition="'$(MSBuildToolsVersion)' == '3.5'">
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|Plain' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>$(IL2JSROOT)\bin</OutputPath>
+    <DefineConstants>TRACE;DEBUG; INTERNETEXPLORER</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|Collecting' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>$(IL2JSROOT)\bin</OutputPath>
+    <DefineConstants>TRACE;DEBUG; INTERNETEXPLORER</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|Traced' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>$(IL2JSROOT)\bin</OutputPath>
+    <DefineConstants>TRACE;DEBUG; INTERNETEXPLORER</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|Plain' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>$(IL2JSROOT)\bin</OutputPath>
+    <DefineConstants>TRACE; INTERNETEXPLORER</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|Collecting' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>$(IL2JSROOT)\bin</OutputPath>
+    <DefineConstants>TRACE; INTERNETEXPLORER</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|Traced' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>$(IL2JSROOT)\bin</OutputPath>
+    <DefineConstants>TRACE; INTERNETEXPLORER</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Microsoft\LiveLabs\Html\Abbreviation.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Acronym.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Address.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Anchor.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Area.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\AreaCollection.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Base.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Bidirectional.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Big.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\BlockQuote.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Body.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Bold.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Break.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Browser.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Button.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Center.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Cite.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Code.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Col.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Colgroup.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Delegates.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\NoScript.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\CurrentStyle.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\DataTransfer.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\DefiningInstance.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Definition.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\DefinitionList.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\DefinitionTerm.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Deleted.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Div.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Document.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\DomAttribute.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\DomAttributeCollection.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\DomImplementation.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\DomNode.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Emphasized.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\FieldSet.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\FixedWidthFont.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Font.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Form.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Frame.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\FrameBase.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\FrameCollection.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\FrameSet.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Head.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Heading.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Heading1.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Heading2.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Heading3.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Heading4.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Heading5.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Heading6.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\History.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\HorizontalRule.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\HtmlElement.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\HtmlElementCollection.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\HtmlEvent.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\HtmlObject.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\IFrame.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Image.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\ImageFactory.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Input.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Inserted.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\InternetExplorer\BackgroundSound.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\InternetExplorer\BaseFont.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\InternetExplorer\Embed.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\InternetExplorer\Example.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\InternetExplorer\Marguee.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\InternetExplorer\Ruby.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\InternetExplorer\RubyText.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Italic.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\KeyboardFont.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Label.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Legend.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Link.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\ListItem.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Location.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Map.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Meta.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Navigator.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\NoBreak.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\NoFrames.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\OffsetPosition.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Option.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\OptionGroup.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\OrderedList.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Page.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Paragraph.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Parameter.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Preserve.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Quote.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\DomNodeCollection.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Rectangle.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\RectangleCollection.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\RenderStyle.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\RuleStyle.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Sample.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Screen.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Script.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Select.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\SelectionObject.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Small.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\SoftLineBreak.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Span.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Strong.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Style.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\StyleElement.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\StyleSheet.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\StyleSheetCollection.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\StyleSheetPage.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\StyleSheetPageCollection.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\StyleSheetRule.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\StyleSheetRuleCollection.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Subscript.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Superscript.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Table.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\TableBody.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\TableCaption.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\TableCell.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\TableFoot.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\TableHead.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\TableHeader.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\TableRow.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\TableSection.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\TextArea.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\TextRange.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\TextRectangle.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Title.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Underline.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\UnorderedList.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Variable.cs" />
+    <Compile Include="Microsoft\LiveLabs\Html\Window.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="system" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Net" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.ServiceModel.Web" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SilverlightInterop\IL2JS_SilverlightInterop.csproj">
+      <Project>{7685B8C6-19CF-411B-AFF4-A8699D0ECA3A}</Project>
+      <Name>IL2JS_SilverlightInterop</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\JSTypes\IL2JS_JSTypes_silverlight.csproj">
+      <Project>{A831B585-1833-4EED-BD51-335D39AF87CC}</Project>
+      <Name>IL2JS_JSTypes_silverlight</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSHARP.Targets" />
+  <Import Project="$(IL2JSROOT)\MSBuild\Microsoft.LiveLabs.JavaScript.IL2JS.targets" />
+  <ProjectExtensions>
+    <VisualStudio AllowExistingFolder="true">
+      <FlavorProperties GUID="{A1591282-1198-4647-A2B1-27E5FF5F6F3B}">
+        <SilverlightProjectProperties />
+      </FlavorProperties>
+    </VisualStudio>
+  </ProjectExtensions>
+</Project>

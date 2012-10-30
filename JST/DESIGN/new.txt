@@ -1,0 +1,43 @@
+MemberExpression ::= PrimaryExpression
+                   | MemberExpression "[" Expression "]"
+                   | MemberExpression "." Identifier
+                   | "new" MemberExpression Arguments
+NewExpression ::= MemberExpression
+                | "new" NewExpression
+CallExpression ::= MemberExpression Arguments
+                 | CallExpression Arguments
+                 | CallExpression "[" Expression "]"
+                 | CallExpression "." Identifier
+LeftHandSideExpression ::= NewExpression | CallExpression
+
+----------------------------------------------------------------------
+
+MemberExpression ::= (PrimaryExpression | "new" MemberExpression Arguments) ("[" Expression "]" | "." Identifier)*
+NewExpression ::= "new"* MemberExpression
+CallExpression ::= (MemberExpression Arguments) (Arguments | "[" Expression "]" | "." Identifier)*
+LeftHandSideExpression ::= NewExpression | CallExpression
+
+----------------------------------------------------------------------
+
+MemberExpression ::= (PrimaryExpression | "new" MemberExpression Arguments) ("[" Expression "]" | "." Identifier)*
+LeftHandSideExpression ::= "new"* MemberExpression
+                         | (MemberExpression Arguments) (Arguments | "[" Expression "]" | "." Identifier)*
+
+----------------------------------------------------------------------
+
+MemberExpression ::= (PrimaryExpression | "new" MemberExpression Arguments) ("[" Expression "]" | "." Identifier)*
+LeftHandSideExpression ::= "new"+ MemberExpression
+                         | MemberExpression (Arguments (Arguments | "[" Expression "]" | "." Identifier)*)?
+
+----------------------------------------------------------------------
+
+MemberExpression ::= "new"^n PrimaryExpression ("[" Expression "]" | "." Identifier)* Arguments^n
+                     ("[" Expression "]" | "." Identifier)*
+LeftHandSideExpression ::= "new"+ MemberExpression
+                         | MemberExpression (Arguments (Arguments | "[" Expression "]" | "." Identifier)*)?
+
+----------------------------------------------------------------------
+
+LeftHandSideExpression ::= "new"^n+m PrimaryExpression (("[" Expression "]" | "." Identifier)* Arguments)^n+o
+                     ("[" Expression "]" | "." Identifier)*
+  where at most one of m and o are > 0

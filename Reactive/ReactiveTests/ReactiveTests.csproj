@@ -1,0 +1,147 @@
+﻿<Project ToolsVersion="3.5" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(SDRoot)\Source\LLDT.Before.Targets" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{8887BAA4-332D-4C74-A52E-93305D9F4C0E}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>ReactiveTests</RootNamespace>
+    <AssemblyName>ReactiveTests</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework">
+      <HintPath>$(SDRoot)\References\Desktop\VS90\Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll</HintPath>
+      <Private>False</Private>
+      <DesktopOnly>true</DesktopOnly>
+    </Reference>
+    <Reference Include="System">
+      <HintPath>$(SDRoot)\References\Desktop\V2.0\System.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Core">
+      <HintPath>$(SDRoot)\References\Desktop\V3.5\System.Core.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Windows.Forms">
+      <DesktopOnly>true</DesktopOnly>
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(SDRoot)\References\Desktop\V2.0\System.Windows.Forms.dll</HintPath>
+    </Reference>
+    <Reference Include="WindowsBase">
+      <Private>false</Private>
+      <DesktopOnly>true</DesktopOnly>
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(SDRoot)\References\Desktop\V3.0\WindowsBase.dll</HintPath>
+    </Reference>
+    <DesktopV4Reference Include="WindowsBase" />
+    <DesktopV4Reference Include="System.Windows.Forms" />
+    <SilverlightReference Include="System.Windows" />
+    <SilverlightReference Include="System.Windows.Browser" />
+    <NetCf37Reference Include="System.Windows" />
+    <NetCf37Reference Include="System.Windows.Browser" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(SDRoot)\Source\LLDT.After.Targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\System.CoreEx\System.CoreEx.csproj">
+      <Project>{CECB1710-6542-4A6B-95D8-4164519493DD}</Project>
+      <Name>System.CoreEx</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\System.Reactive\System.Reactive.csproj">
+      <Project>{DC2DC484-1B78-4ED4-8893-5E0457825756}</Project>
+      <Name>System.Reactive</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\System.Observable\System.Observable.csproj">
+      <Project>{6c58bed8-8604-4fdf-baad-5c3c975adba6}</Project>
+      <TargetFrameworks>DesktopClr20,Silverlight,NetCf37</TargetFrameworks>
+      <Name>System.Observable</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\System.Threading\System.Threading.csproj">
+      <Project>{2A463822-70A5-4095-A3DF-96CA4EACE93F}</Project>
+      <Name>System.Threading</Name>
+      <TargetFrameworks>DesktopClr20</TargetFrameworks>
+    </ProjectReference>
+    <NetCf37ProjectReference Include="..\NetCf37TestHelpers\NetCf37TestHelpers.csproj">
+      <Project>{d196e0ca-cbf8-45e2-8536-436b39fe04fc}</Project>
+      <Name>NetCf37TestHelpers</Name>
+      <TargetFrameworks>NetCf37</TargetFrameworks>
+    </NetCf37ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Dummies\DummyDisposable.cs" />
+    <Compile Include="Dummies\DummyEnumerable.cs" />
+    <Compile Include="Dummies\DummyFunc.cs" />
+    <Compile Include="Dummies\DummyObservable.cs" />
+    <Compile Include="Dummies\DummyObserver.cs" />
+    <Compile Include="Dummies\DummyScheduler.cs" />
+    <Compile Include="Extensions.cs" />
+    <Compile Include="Mocks\ColdObservable.cs" />
+    <Compile Include="Mocks\HotObservable.cs" />
+    <Compile Include="Mocks\MockDisposable.cs" />
+    <Compile Include="Mocks\MockEnumerable.cs" />
+    <Compile Include="Mocks\MockException.cs" />
+    <Compile Include="Mocks\MockObservable.cs" />
+    <Compile Include="Mocks\MockObserver.cs" />
+    <Compile Include="Mocks\NullEnumeratorEnumerable.cs" />
+    <Compile Include="Mocks\NullErrorObservable.cs" />
+    <Compile Include="Mocks\SubscribeThrowsObservable.cs" />
+    <Compile Include="PriorityQueue.cs" />
+    <Compile Include="Recorded.cs" />
+    <Compile Include="Subscription.cs" />
+    <Compile Include="TestScheduler.cs" />
+    <Compile Include="TestScheduler.Extensions.cs" />
+    <Compile Include="Tests\AsyncSubjectTest.cs" />
+    <Compile Include="Tests\BehaviorSubjectTest.cs" />
+    <Compile Include="Tests\NotificationTest.cs" />
+    <Compile Include="Tests\ObservableAggregateTest.cs" />
+    <Compile Include="Tests\ObservableAsyncTest.cs" />
+    <Compile Include="Tests\ObservableBindingTest.cs" />
+    <Compile Include="Tests\ObservableBlockingTest.cs" />
+    <Compile Include="Tests\ObservableConcurrencyTest.cs" />
+    <Compile Include="Tests\ObservableCreationTest.cs" />
+    <Compile Include="Tests\ObservableExtensionsTest.cs" />
+    <Compile Include="Tests\ObservableJoinsTest.cs" />
+    <Compile Include="Tests\ObservableMultipleTest.cs" />
+    <Compile Include="Tests\ObservableRemotingTest.cs" />
+    <Compile Include="Tests\ObservableSingleTest.cs" />
+    <Compile Include="Tests\ObservableStandardQueryOperatorTest.cs" />
+    <Compile Include="Tests\ObservableTimeTest.cs" />
+    <Compile Include="Tests\ObserverTest.cs" />
+    <Compile Include="Tests\PrivateTypesTest.cs" />
+    <Compile Include="Tests\RegressionTest.cs" />
+    <Compile Include="Tests\ReplaySubjectTest.cs" />
+    <Compile Include="Tests\SubjectTest.cs" />
+    <Compile Include="Tests\Test.cs" />
+    <Compile Include="TestTaskScheduler.cs" />
+  </ItemGroup>
+</Project>

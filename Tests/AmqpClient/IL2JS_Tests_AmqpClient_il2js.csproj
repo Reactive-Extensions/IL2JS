@@ -1,0 +1,656 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{F507DA05-D197-47E6-B9E4-B75C732BBFC3}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Microsoft.ServiceBus.Messaging.Amqp</RootNamespace>
+    <AssemblyName>Microsoft.ServiceBus.Messaging.Amqp</AssemblyName>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+    <FileAlignment>512</FileAlignment>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x64\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <CodeAnalysisLogFile>bin\Debug\AmqpClient.exe.CodeAnalysisLog.xml</CodeAnalysisLogFile>
+    <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
+    <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSetDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\\Rule Sets</CodeAnalysisRuleSetDirectories>
+    <CodeAnalysisIgnoreBuiltInRuleSets>true</CodeAnalysisIgnoreBuiltInRuleSets>
+    <CodeAnalysisRuleDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleDirectories>
+    <CodeAnalysisIgnoreBuiltInRules>true</CodeAnalysisIgnoreBuiltInRules>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <OutputPath>bin\x64\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <CodeAnalysisLogFile>bin\Release\AmqpClient.exe.CodeAnalysisLog.xml</CodeAnalysisLogFile>
+    <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
+    <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSetDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\\Rule Sets</CodeAnalysisRuleSetDirectories>
+    <CodeAnalysisIgnoreBuiltInRuleSets>true</CodeAnalysisIgnoreBuiltInRuleSets>
+    <CodeAnalysisRuleDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleDirectories>
+    <CodeAnalysisIgnoreBuiltInRules>true</CodeAnalysisIgnoreBuiltInRules>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Transactions" />
+    <Reference Include="System.XML" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Common\ActionItem.cs">
+      <Link>Common\ActionItem.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Common\AsyncResult.cs">
+      <Link>Common\AsyncResult.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Common\CallbackException.cs">
+      <Link>Common\CallbackException.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Common\CompletedAsyncResult.cs">
+      <Link>Common\CompletedAsyncResult.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Common\ComputerNameFormat.cs">
+      <Link>Common\ComputerNameFormat.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Common\FatalException.cs">
+      <Link>Common\FatalException.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Common\FXCop.cs">
+      <Link>Common\FXCop.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Common\InputQueue.cs">
+      <Link>Common\InputQueue.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Common\InternalBufferManager.cs">
+      <Link>Common\InternalBufferManager.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Common\Interop\SafeEventLogWriteHandle.cs">
+      <Link>Common\Interop\SafeEventLogWriteHandle.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Common\Interop\UnsafeNativeMethods.cs">
+      <Link>Common\Interop\UnsafeNativeMethods.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Common\IOThreadScheduler.cs">
+      <Link>Common\IOThreadScheduler.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Common\IOThreadTimer.cs">
+      <Link>Common\IOThreadTimer.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Common\PartialTrustHelpers.cs">
+      <Link>Common\PartialTrustHelpers.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Common\SignalGate.cs">
+      <Link>Common\SignalGate.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Common\SynchronizedPool.cs">
+      <Link>Common\SynchronizedPool.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Common\Ticks.cs">
+      <Link>Common\Ticks.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Common\TimeoutHelper.cs">
+      <Link>Common\TimeoutHelper.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Common\WaitCallbackActionItem.cs">
+      <Link>Common\WaitCallbackActionItem.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\AmqpCodec.cs">
+      <Link>Amqp\AmqpCodec.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\AmqpConnection.cs">
+      <Link>Amqp\AmqpConnection.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\AmqpConnectionBase.cs">
+      <Link>Amqp\AmqpConnectionBase.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\AmqpConnectionSettings.cs">
+      <Link>Amqp\AmqpConnectionSettings.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\AmqpConnectionState.cs">
+      <Link>Amqp\AmqpConnectionState.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\AmqpConstants.cs">
+      <Link>Amqp\AmqpConstants.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\AmqpErrorCode.cs">
+      <Link>Amqp\AmqpErrorCode.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\AmqpException.cs">
+      <Link>Amqp\AmqpException.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\AmqpLink.cs">
+      <Link>Amqp\AmqpLink.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\AmqpLinkCollection.cs">
+      <Link>Amqp\AmqpLinkCollection.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\AmqpLinkSettings.cs">
+      <Link>Amqp\AmqpLinkSettings.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\AmqpMessage.cs">
+      <Link>Amqp\AmqpMessage.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\AmqpObject.cs">
+      <Link>Amqp\AmqpObject.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\AmqpSession.cs">
+      <Link>Amqp\AmqpSession.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\AmqpSessionError.cs">
+      <Link>Amqp\AmqpSessionError.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\AmqpSessionSettings.cs">
+      <Link>Amqp\AmqpSessionSettings.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\AmqpSettings.cs">
+      <Link>Amqp\AmqpSettings.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\AmqpVersion.cs">
+      <Link>Amqp\AmqpVersion.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\AsyncIO.cs">
+      <Link>Amqp\AsyncIO.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\BufferListStream.cs">
+      <Link>Amqp\BufferListStream.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\ByteArrayComparer.cs">
+      <Link>Amqp\ByteArrayComparer.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\ByteBuffer.cs">
+      <Link>Amqp\ByteBuffer.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Delivery.cs">
+      <Link>Amqp\Delivery.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Encoding\AmqpBitConverter.cs">
+      <Link>Amqp\Encoding\AmqpBitConverter.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Encoding\AmqpEncoding.cs">
+      <Link>Amqp\Encoding\AmqpEncoding.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Encoding\AmqpMap.cs">
+      <Link>Amqp\Encoding\AmqpMap.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Encoding\AmqpSymbol.cs">
+      <Link>Amqp\Encoding\AmqpSymbol.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Encoding\ArrayEncoding.cs">
+      <Link>Amqp\Encoding\ArrayEncoding.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Encoding\BinaryEncoding.cs">
+      <Link>Amqp\Encoding\BinaryEncoding.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Encoding\BooleanEncoding.cs">
+      <Link>Amqp\Encoding\BooleanEncoding.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Encoding\ByteEncoding.cs">
+      <Link>Amqp\Encoding\ByteEncoding.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Encoding\CharEncoding.cs">
+      <Link>Amqp\Encoding\CharEncoding.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Encoding\DecimalEncoding.cs">
+      <Link>Amqp\Encoding\DecimalEncoding.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Encoding\DescribedEncoding.cs">
+      <Link>Amqp\Encoding\DescribedEncoding.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Encoding\DescribedType.cs">
+      <Link>Amqp\Encoding\DescribedType.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Encoding\DoubleEncoding.cs">
+      <Link>Amqp\Encoding\DoubleEncoding.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Encoding\EncodingBase.cs">
+      <Link>Amqp\Encoding\EncodingBase.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Encoding\FixedWidth.cs">
+      <Link>Amqp\Encoding\FixedWidth.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Encoding\FloatEncoding.cs">
+      <Link>Amqp\Encoding\FloatEncoding.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Encoding\FormatCode.cs">
+      <Link>Amqp\Encoding\FormatCode.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Encoding\IAmqpSerializable.cs">
+      <Link>Amqp\Encoding\IAmqpSerializable.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Encoding\IntEncoding.cs">
+      <Link>Amqp\Encoding\IntEncoding.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Encoding\ListEncoding.cs">
+      <Link>Amqp\Encoding\ListEncoding.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Encoding\LongEncoding.cs">
+      <Link>Amqp\Encoding\LongEncoding.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Encoding\MapEncoding.cs">
+      <Link>Amqp\Encoding\MapEncoding.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Encoding\MapKey.cs">
+      <Link>Amqp\Encoding\MapKey.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Encoding\ShortEncoding.cs">
+      <Link>Amqp\Encoding\ShortEncoding.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Encoding\StringEncoding.cs">
+      <Link>Amqp\Encoding\StringEncoding.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Encoding\SymbolEncoding.cs">
+      <Link>Amqp\Encoding\SymbolEncoding.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Encoding\TimeStampEncoding.cs">
+      <Link>Amqp\Encoding\TimeStampEncoding.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Encoding\UByteEncoding.cs">
+      <Link>Amqp\Encoding\UByteEncoding.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Encoding\UIntEncoding.cs">
+      <Link>Amqp\Encoding\UIntEncoding.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Encoding\ULongEncoding.cs">
+      <Link>Amqp\Encoding\ULongEncoding.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Encoding\UShortEncoding.cs">
+      <Link>Amqp\Encoding\UShortEncoding.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Encoding\UuidEncoding.cs">
+      <Link>Amqp\Encoding\UuidEncoding.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Extensions.cs">
+      <Link>Amqp\Extensions.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\FrameDecoder.cs">
+      <Link>Amqp\FrameDecoder.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\Accepted.cs">
+      <Link>Amqp\Framing\Accepted.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\Address.cs">
+      <Link>Amqp\Framing\Address.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\AmqpDescribed.cs">
+      <Link>Amqp\Framing\AmqpDescribed.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\AmqpSequence.cs">
+      <Link>Amqp\Framing\AmqpSequence.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\AmqpValue.cs">
+      <Link>Amqp\Framing\AmqpValue.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\ApplicationProperties.cs">
+      <Link>Amqp\Framing\ApplicationProperties.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\Attach.cs">
+      <Link>Amqp\Framing\Attach.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\Begin.cs">
+      <Link>Amqp\Framing\Begin.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\Close.cs">
+      <Link>Amqp\Framing\Close.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\Data.cs">
+      <Link>Amqp\Framing\Data.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\DeleteOnClose.cs">
+      <Link>Amqp\Framing\DeleteOnClose.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\DeleteOnNoLinks.cs">
+      <Link>Amqp\Framing\DeleteOnNoLinks.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\DeleteOnNoLinksOrMessages.cs">
+      <Link>Amqp\Framing\DeleteOnNoLinksOrMessages.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\DeleteOnNoMessages.cs">
+      <Link>Amqp\Framing\DeleteOnNoMessages.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\DeliveryAnnotations.cs">
+      <Link>Amqp\Framing\DeliveryAnnotations.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\DeliveryState.cs">
+      <Link>Amqp\Framing\DeliveryState.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\DescribedAnnotations.cs">
+      <Link>Amqp\Framing\DescribedAnnotations.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\DescribedList.cs">
+      <Link>Amqp\Framing\DescribedList.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\DescribedMap.cs">
+      <Link>Amqp\Framing\DescribedMap.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\Detach.cs">
+      <Link>Amqp\Framing\Detach.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\Disposition.cs">
+      <Link>Amqp\Framing\Disposition.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\DistributionMode.cs">
+      <Link>Amqp\Framing\DistributionMode.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\End.cs">
+      <Link>Amqp\Framing\End.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\Error.cs">
+      <Link>Amqp\Framing\Error.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\Flow.cs">
+      <Link>Amqp\Framing\Flow.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\Footer.cs">
+      <Link>Amqp\Framing\Footer.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\Frame.cs">
+      <Link>Amqp\Framing\Frame.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\FrameType.cs">
+      <Link>Amqp\Framing\FrameType.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\Header.cs">
+      <Link>Amqp\Framing\Header.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\LifetimePolicy.cs">
+      <Link>Amqp\Framing\LifetimePolicy.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\LinkPerformative.cs">
+      <Link>Amqp\Framing\LinkPerformative.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\MessageAnnotations.cs">
+      <Link>Amqp\Framing\MessageAnnotations.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\MessageId.cs">
+      <Link>Amqp\Framing\MessageId.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\Modified.cs">
+      <Link>Amqp\Framing\Modified.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\Multiple.cs">
+      <Link>Amqp\Framing\Multiple.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\Open.cs">
+      <Link>Amqp\Framing\Open.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\Outcome.cs">
+      <Link>Amqp\Framing\Outcome.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\Performative.cs">
+      <Link>Amqp\Framing\Performative.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\Properties.cs">
+      <Link>Amqp\Framing\Properties.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\ProtocolHeader.cs">
+      <Link>Amqp\Framing\ProtocolHeader.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\Received.cs">
+      <Link>Amqp\Framing\Received.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\ReceiverSettleMode.cs">
+      <Link>Amqp\Framing\ReceiverSettleMode.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\Rejected.cs">
+      <Link>Amqp\Framing\Rejected.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\Released.cs">
+      <Link>Amqp\Framing\Released.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\RestrictedMap.cs">
+      <Link>Amqp\Framing\RestrictedMap.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\SenderSettleMode.cs">
+      <Link>Amqp\Framing\SenderSettleMode.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\Source.cs">
+      <Link>Amqp\Framing\Source.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\Target.cs">
+      <Link>Amqp\Framing\Target.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\Terminus.cs">
+      <Link>Amqp\Framing\Terminus.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\TerminusDurability.cs">
+      <Link>Amqp\Framing\TerminusDurability.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\TerminusExpiryPolicy.cs">
+      <Link>Amqp\Framing\TerminusExpiryPolicy.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Framing\Transfer.cs">
+      <Link>Amqp\Framing\Transfer.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\HandleTable.cs">
+      <Link>Amqp\HandleTable.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\IAmqpProvider.cs">
+      <Link>Amqp\IAmqpProvider.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Pool.cs">
+      <Link>Amqp\Pool.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\ProtocolId.cs">
+      <Link>Amqp\ProtocolId.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\ReceivingAmqpLink.cs">
+      <Link>Amqp\ReceivingAmqpLink.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Sasl\ISaslPlainAuthenticator.cs">
+      <Link>Amqp\Sasl\ISaslPlainAuthenticator.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Sasl\SaslAnonymousHandler.cs">
+      <Link>Amqp\Sasl\SaslAnonymousHandler.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Sasl\SaslChallenge.cs">
+      <Link>Amqp\Sasl\SaslChallenge.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Sasl\SaslCode.cs">
+      <Link>Amqp\Sasl\SaslCode.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Sasl\SaslHandler.cs">
+      <Link>Amqp\Sasl\SaslHandler.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Sasl\SaslInit.cs">
+      <Link>Amqp\Sasl\SaslInit.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Sasl\SaslMechanisms.cs">
+      <Link>Amqp\Sasl\SaslMechanisms.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Sasl\SaslNegotiator.cs">
+      <Link>Amqp\Sasl\SaslNegotiator.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Sasl\SaslOutcome.cs">
+      <Link>Amqp\Sasl\SaslOutcome.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Sasl\SaslPlainHandler.cs">
+      <Link>Amqp\Sasl\SaslPlainHandler.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Sasl\SaslResponse.cs">
+      <Link>Amqp\Sasl\SaslResponse.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Sasl\SaslTransport.cs">
+      <Link>Amqp\Sasl\SaslTransport.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Sasl\SaslTransportProvider.cs">
+      <Link>Amqp\Sasl\SaslTransportProvider.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\SendingAmqpLink.cs">
+      <Link>Amqp\SendingAmqpLink.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\SequenceNumber.cs">
+      <Link>Amqp\SequenceNumber.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Serialization\AmqpContractAttribute.cs">
+      <Link>Amqp\Serialization\AmqpContractAttribute.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Serialization\AmqpContractSerializer.cs">
+      <Link>Amqp\Serialization\AmqpContractSerializer.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Serialization\AmqpMemberAttribute.cs">
+      <Link>Amqp\Serialization\AmqpMemberAttribute.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Serialization\MemberAccessor.cs">
+      <Link>Amqp\Serialization\MemberAccessor.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Serialization\SerialiableMember.cs">
+      <Link>Amqp\Serialization\SerialiableMember.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Serialization\SerializableType.cs">
+      <Link>Amqp\Serialization\SerializableType.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Serialization\SerializableTypeCache.cs">
+      <Link>Amqp\Serialization\SerializableTypeCache.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\SerializedWorker.cs">
+      <Link>Amqp\SerializedWorker.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\SettleMode.cs">
+      <Link>Amqp\SettleMode.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\StateTransition.cs">
+      <Link>Amqp\StateTransition.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Transaction\Controller.cs">
+      <Link>Amqp\Transaction\Controller.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Transaction\Coordinator.cs">
+      <Link>Amqp\Transaction\Coordinator.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Transaction\Declare.cs">
+      <Link>Amqp\Transaction\Declare.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Transaction\Declared.cs">
+      <Link>Amqp\Transaction\Declared.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Transaction\Discharge.cs">
+      <Link>Amqp\Transaction\Discharge.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Transaction\TransactionalState.cs">
+      <Link>Amqp\Transaction\TransactionalState.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Transaction\TxnCapabilities.cs">
+      <Link>Amqp\Transaction\TxnCapabilities.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Transport\AmqpTransportInitiator.cs">
+      <Link>Amqp\Transport\AmqpTransportInitiator.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Transport\AmqpTransportListener.cs">
+      <Link>Amqp\Transport\AmqpTransportListener.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Transport\AmqpTransportProvider.cs">
+      <Link>Amqp\Transport\AmqpTransportProvider.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Transport\TcpTransport.cs">
+      <Link>Amqp\Transport\TcpTransport.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Transport\TcpTransportInitiator.cs">
+      <Link>Amqp\Transport\TcpTransportInitiator.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Transport\TcpTransportListener.cs">
+      <Link>Amqp\Transport\TcpTransportListener.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Transport\TcpTransportSetting.cs">
+      <Link>Amqp\Transport\TcpTransportSetting.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Transport\TlsTransport.cs">
+      <Link>Amqp\Transport\TlsTransport.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Transport\TlsTransportInitiator.cs">
+      <Link>Amqp\Transport\TlsTransportInitiator.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Transport\TlsTransportListener.cs">
+      <Link>Amqp\Transport\TlsTransportListener.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Transport\TlsTransportProvider.cs">
+      <Link>Amqp\Transport\TlsTransportProvider.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Transport\TlsTransportSetting.cs">
+      <Link>Amqp\Transport\TlsTransportSetting.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Transport\TransportAsyncEventArgs.cs">
+      <Link>Amqp\Transport\TransportAsyncEventArgs.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Transport\TransportBase.cs">
+      <Link>Amqp\Transport\TransportBase.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Transport\TransportInitiator.cs">
+      <Link>Amqp\Transport\TransportInitiator.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Transport\TransportListener.cs">
+      <Link>Amqp\Transport\TransportListener.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Transport\TransportProvider.cs">
+      <Link>Amqp\Transport\TransportProvider.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Transport\TransportSettings.cs">
+      <Link>Amqp\Transport\TransportSettings.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Transport\TransportShutdownOption.cs">
+      <Link>Amqp\Transport\TransportShutdownOption.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Transport\TransportStream.cs">
+      <Link>Amqp\Transport\TransportStream.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\Messaging\Amqp\Utils.cs">
+      <Link>Amqp\Utils.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\SRClient.Designer.cs">
+      <Link>Amqp\SRClient.Designer.cs</Link>
+    </Compile>
+    <Compile Include="..\Microsoft.ServiceBus.Messaging\SRCore.Designer.cs">
+      <Link>Common\SRCore.Designer.cs</Link>
+    </Compile>
+    <Compile Include="Amqp\AmqpStream.cs" />
+    <Compile Include="Amqp\Container.cs" />
+    <Compile Include="Common\Fx.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

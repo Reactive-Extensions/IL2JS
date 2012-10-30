@@ -1,0 +1,63 @@
+Code Layout for generated JavaScript
+------------------------------------
+
+
+In debug mode
+-------------
+
+The runtime is always placed in:
+
+  <outdir>/runtime.js
+
+All code for an assembly goes into:
+
+  <outdir>/<assmname>/all.js
+
+This code assumes the runtime and all referenced assemblies have been loaded. If the assembly has an entry point,
+it is invoked at the end of this file.
+
+Each referenced assembly, type and method emit a trace event on first invocation:
+
+  Assembly("<assmname>");
+  Type("<assmname>", "<typename>");
+  Method("<assmname>", "<typename>", "<methodname>");
+
+In release mode
+---------------
+
+The runtime is always placed in:
+
+  <outdir>/runtime.js
+
+Every definition exists in exactly one of:
+ - the INITIAL trace (which may be empty)
+ - a non-INITIAL trace
+ - a self-loading file
+
+Trace files go into:
+
+  <outdir>/<tracename>.js
+
+Self-loading files go into:
+
+  <outdir>/<assmname>/assembly.js                     -- Binds <assembly> structure into AssemblyCache
+  <outdir>/<assmname>/<typeslot>/type.js              -- Binds <type> structure into TypeCache of <assembly> structure
+  <outdir>/<assmname>/<typeslot>/reflection.js        -- Binds all reflection fields into <type> structure
+  <outdir>/<assmname>/<typeslot>/<methslot>/method.js -- Binds method into <type> structure
+
+Each assembly with an entry point will have a file:
+
+  <outdir>/<assmname>/start.js
+
+This will invoke the assemblies entry point.
+
+The INITIAL trace assumes the runtime has been loaded. It binds all definitions appearing
+in the INITIAL trace. All remaining definitions are given forwarding loaders. Each forwarding loader asks either for
+the trace file or the self-loading file.
+
+Non-INITIAL traces assume the runtime and the INITIAL trace have been loaded, but do not assume any other traces
+or any self-loading definitions have been loaded.
+
+Self-loading files assume that the runtime has been loaded and initialized. Type loaders assume their containing
+assemblies have been loaded, and method loaders assume their containing types have been loaded.
+

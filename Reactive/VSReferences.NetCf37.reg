@@ -1,0 +1,11 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\.NETCompactFramework\v3.7.0.0\PocketPC\AssemblyFoldersEx\ReactiveExtensions]
+@="%LAYOUT%\\redist\\NetCf37"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\.NETCompactFramework\v3.7.0.0\Smartphone\AssemblyFoldersEx\ReactiveExtensions]
+@="%LAYOUT%\\redist\\NetCf37"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\.NETCompactFramework\v3.7.0.0\WindowsCE\AssemblyFoldersEx\ReactiveExtensions]
+@="%LAYOUT%\\redist\\NetCf37"
+

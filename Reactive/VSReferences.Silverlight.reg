@@ -1,0 +1,7 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Microsoft SDKs\Silverlight\v2.0\AssemblyFoldersEx\ReactiveExtensions]
+@="%LAYOUT%\\redist\\Silverlight"
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Microsoft SDKs\Silverlight\v3.0\AssemblyFoldersEx\ReactiveExtensions]
+@="%LAYOUT%\\redist\\Silverlight"
